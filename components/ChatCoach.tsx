@@ -232,9 +232,6 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
                   <i className="fa-solid fa-bars-staggered"></i>
                 </button>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                    <i className="fa-solid fa-compass"></i>
-                  </div>
                   <h3 className="font-semibold truncate max-w-[150px]">Nomad Coach</h3>
                 </div>
               </div>

@@ -92,7 +92,7 @@ const Header: React.FC = () => {
             </div>
             <button 
               onClick={() => window.location.reload()}
-              className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full border border-blue-100 hover:bg-blue-600 hover:text-white shadow-sm transition-all text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-1 group"
+              className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full border border-blue-100 hover:bg-blue-600 hover:text-white shadow-sm transition-all text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 mt-1 ml-12 group"
             >
               <i className="fa-solid fa-wand-magic-sparkles group-hover:animate-pulse"></i> New Trip
             </button>

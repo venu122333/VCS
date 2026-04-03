@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ChatCoach from './components/ChatCoach';
-import ItineraryDisplay from './ItineraryDisplay';
+import ItineraryDisplay from './components/ItineraryDisplay';
 import HeroSlideshow from './components/HeroSlideshow';
 import { TravelPlan, TravelMood, TravelerType } from './types';
 import { generateTravelPlan, generateDestinationImage } from './services/geminiService';
@@ -47,13 +47,6 @@ const App: React.FC = () => {
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Check for API key
-    if (!process.env.API_KEY) {
-      setError('Gemini API key is missing. If you are hosting this yourself, please set the GEMINI_API_KEY environment variable in your .env file or build settings.');
-      return;
-    }
-
     if (!destination) {
       setError('Please enter a destination');
       return;
@@ -400,15 +393,6 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight">Nomad<span className="text-blue-500">AI</span> Trip Planner</span>
-          </div>
-          <div className="flex flex-col items-center md:items-end gap-2">
-            <p className="text-slate-400 text-sm">© {new Date().getFullYear()} All rights reserved.</p>
-            <p className="text-slate-500 text-xs font-medium tracking-wide flex items-center gap-2">
-              Proudly made by an Indian.
-              <span className="text-orange-500">●</span>
-              <span className="text-white">●</span>
-              <span className="text-green-500">●</span>
-            </p>
           </div>
         </div>
       </footer>

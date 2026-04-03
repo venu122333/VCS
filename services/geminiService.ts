@@ -2,7 +2,15 @@
 import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import { TravelPlan, TravelMood, TravelerType } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Helper to get the best available API key
+const getApiKey = () => {
+  return localStorage.getItem('NOMAD_AI_KEY') || process.env.API_KEY || '';
+};
+
+// Function to get a fresh AI instance with the current key
+const getAI = () => {
+  return new GoogleGenAI({ apiKey: getApiKey() });
+};
 
 export const generateTravelPlan = async (
   destination: string,
@@ -14,6 +22,7 @@ export const generateTravelPlan = async (
   budget: number | undefined,
   currencyInfo: string
 ): Promise<TravelPlan> => {
+  const ai = getAI();
   const budgetText = budget ? `The total budget for this trip is ${budget} ${currencyInfo}.` : `No specific budget provided, suggest a standard mid-range plan in ${currencyInfo}.`;
   const budgetLogic = budget ? `
   - Check if the provided budget of ${budget} ${currencyInfo} is realistic for a ${duration}-day trip to ${destination} for ${travelerCount} ${travelerType}(s).
@@ -148,6 +157,7 @@ export const generateTravelPlan = async (
 };
 
 export const createTravelChat = (systemInstruction: string) => {
+  const ai = getAI();
   return ai.chats.create({
     model: 'gemini-3-flash-preview',
     config: {
@@ -157,6 +167,7 @@ export const createTravelChat = (systemInstruction: string) => {
 };
 
 export const generateDestinationImage = async (destination: string, mood: string): Promise<string> => {
+  const ai = getAI();
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
     contents: {
@@ -178,6 +189,7 @@ export const generateDestinationImage = async (destination: string, mood: string
 };
 
 export const getTravelCost = async (location: string): Promise<{ type: 'flight' | 'car', cost: number, details: string }> => {
+  const ai = getAI();
   const prompt = `Estimate the travel cost from ${location} to the nearest major international airport. 
   If ${location} has an airport, provide the average flight cost to a popular international destination. 
   If ${location} does not have an airport, provide the car/taxi cost to the nearest airport and then the flight cost.
