@@ -1,0 +1,7 @@
+{
+  "name": "NomadAI Trip Planner",
+  "description": "An AI-powered travel planning assistant that creates personalized itineraries based on your mood, style, and preferences. Features a travel coach chatbot and immersive destination exploration.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
