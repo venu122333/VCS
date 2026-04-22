@@ -44,47 +44,44 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Itinerary */}
-        <div className="lg:col-span-2 space-y-8">
-          <h2 className="text-3xl font-bold flex items-center gap-3">
-            <i className="fa-solid fa-calendar-day text-blue-600"></i>
+        <div className="lg:col-span-2 space-y-12">
+          <h2 className="text-4xl font-black flex items-center gap-4 text-slate-900 uppercase tracking-tighter">
+            <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white">
+              <i className="fa-solid fa-calendar-day"></i>
+            </div>
             Daily Adventure
           </h2>
           
           {plan.itinerary.map((day) => (
-            <div key={day.day} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-slate-800">Day {day.day}: {day.theme}</h3>
-                <i className="fa-solid fa-map-location-dot text-blue-500"></i>
+            <div key={day.day} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center gap-6 border-b-4 border-slate-100 pb-4">
+                <span className="text-6xl font-black text-blue-100 italic select-none">0{day.day}</span>
+                <h3 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Day {day.day}: <span className="text-blue-600">{day.theme}</span></h3>
               </div>
-              <div className="p-6 space-y-6">
+              
+              <div className="space-y-10 pl-4 md:pl-8 border-l-4 border-slate-50 ml-4 md:ml-8">
                 {day.activities.map((act, i) => (
-                  <div key={i} className="flex gap-4 group">
-                    <div className="flex flex-col items-center">
-                      <div className="w-3 h-3 rounded-full bg-blue-600 ring-4 ring-blue-100 mt-2"></div>
-                      {i !== day.activities.length - 1 && <div className="w-0.5 h-full bg-slate-100 my-2"></div>}
-                    </div>
+                  <div key={i} className="relative group">
+                    {/* Activity dot */}
+                    <div className="absolute -left-[30px] md:-left-[46px] top-2 w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow-lg group-hover:scale-125 transition-transform"></div>
+                    
                     <div>
-                      <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">{act.time}</span>
-                      <h4 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{act.activity}</h4>
-                      <p className="text-slate-600 mt-1 leading-relaxed">{act.description}</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">{act.time}</span>
+                      </div>
+                      <h4 className="text-2xl font-black text-slate-900 mb-3 group-hover:text-blue-600 transition-colors tracking-tight">{act.activity}</h4>
+                      <p className="text-slate-500 font-medium leading-relaxed max-w-xl text-base">{act.description}</p>
+                      
                       {act.location && (
-                        <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="flex flex-wrap gap-2 mt-4">
                           <a 
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(act.location)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm"
+                            className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors"
                           >
                             <i className="fa-solid fa-location-dot"></i> {act.location}
                           </a>
-                          {act.phoneNumber && (
-                            <a 
-                              href={`tel:${act.phoneNumber}`}
-                              className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full hover:bg-emerald-100 transition-colors border border-emerald-100 shadow-sm"
-                            >
-                              <i className="fa-solid fa-phone"></i> {act.phoneNumber}
-                            </a>
-                          )}
                         </div>
                       )}
                     </div>
@@ -118,19 +115,35 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
               <i className="fa-solid fa-receipt text-green-500"></i>
               Cost Breakdown
             </h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={plan.estimatedBudget} layout="vertical">
+            <div className="h-64 outline-none focus:outline-none">
+              <ResponsiveContainer width="100%" height="100%" className="outline-none focus:outline-none">
+                <BarChart 
+                  data={plan.estimatedBudget} 
+                  layout="vertical"
+                  style={{ outline: 'none' }}
+                  className="outline-none focus:outline-none"
+                  accessibilityLayer={false}
+                >
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                   <XAxis type="number" hide />
                   <YAxis dataKey="category" type="category" width={100} fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip 
-                    cursor={{fill: 'transparent'}} 
+                    cursor={false} 
                     formatter={(value: number) => [`${value.toLocaleString()} ${plan.currencyCode}`, 'Amount']}
                   />
-                  <Bar dataKey="amount" radius={[0, 4, 4, 0]}>
+                  <Bar 
+                    dataKey="amount" 
+                    radius={[0, 4, 4, 0]}
+                    activeBar={false}
+                    stroke="none"
+                  >
                     {plan.estimatedBudget.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={COLORS[index % COLORS.length]} 
+                        stroke="none"
+                        style={{ outline: 'none' }}
+                      />
                     ))}
                   </Bar>
                 </BarChart>
@@ -210,9 +223,9 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
 
       {/* Tour Navigator Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden p-8">
-        <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+        <h3 className="text-2xl font-black mb-6 flex items-center gap-3">
           <i className="fa-solid fa-user-tie text-blue-600"></i>
-          Tour Navigator
+          Meet Your Navigator
         </h3>
         {plan.tourNavigator ? (
           <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
@@ -220,12 +233,12 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
               <i className="fa-solid fa-id-card"></i>
             </div>
             <div className="flex-1 space-y-3 text-center md:text-left">
-              <h4 className="text-xl font-bold text-slate-900">{plan.tourNavigator.name}</h4>
-              <p className="text-slate-600 leading-relaxed max-w-2xl">{plan.tourNavigator.description}</p>
+              <h4 className="text-xl font-black text-slate-900">{plan.tourNavigator.name}</h4>
+              <p className="text-slate-600 font-medium leading-relaxed max-w-2xl">{plan.tourNavigator.description}</p>
               <div className="pt-2">
                 <a 
                   href={`tel:${plan.tourNavigator.phoneNumber}`}
-                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-full font-bold hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 active:scale-95"
+                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-full font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 active:scale-95"
                 >
                   <i className="fa-solid fa-phone"></i>
                   Call Navigator: {plan.tourNavigator.phoneNumber}
@@ -239,6 +252,42 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
             <p className="text-slate-500 font-medium italic">There is no navigator available for this town.</p>
           </div>
         )}
+      </div>
+
+      {/* Beyond Simple Planning Section */}
+      <div className="space-y-8 pt-6">
+        <h3 className="text-2xl font-black text-center text-slate-900 uppercase tracking-[0.2em]">Beyond Simple Planning</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-xl hover:translate-y-[-4px] transition-all">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
+              <i className="fa-solid fa-brain text-blue-600 text-xl"></i>
+            </div>
+            <h4 className="text-lg font-black text-slate-900 mb-3">Intelligence</h4>
+            <p className="text-slate-500 text-sm font-medium leading-relaxed">
+              Analyzes your desired vibe to pick activities that match your emotional state, from deep relaxation to high-octane thrills.
+            </p>
+          </div>
+          
+          <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-xl hover:translate-y-[-4px] transition-all">
+            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6">
+              <i className="fa-solid fa-comment-dots text-emerald-600 text-xl"></i>
+            </div>
+            <h4 className="text-lg font-black text-slate-900 mb-3">24/7 Travel Coach</h4>
+            <p className="text-slate-500 text-sm font-medium leading-relaxed">
+              Stuck at a station? Need a late-night dinner recommendation? Chat with our AI coach anytime, anywhere.
+            </p>
+          </div>
+          
+          <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-xl hover:translate-y-[-4px] transition-all">
+            <div className="w-12 h-12 bg-violet-50 rounded-2xl flex items-center justify-center mb-6">
+              <i className="fa-solid fa-coins text-violet-600 text-xl"></i>
+            </div>
+            <h4 className="text-lg font-black text-slate-900 mb-3">Smart Budgeting</h4>
+            <p className="text-slate-500 text-sm font-medium leading-relaxed">
+              Real-time estimated costs help you manage your funds without the spreadsheets. Know what to expect before you arrive.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

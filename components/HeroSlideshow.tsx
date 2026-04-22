@@ -4,24 +4,24 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const images = [
   {
-    url: 'https://picsum.photos/seed/nature-trip/1920/1080',
-    alt: 'Nature Exploration'
+    url: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1920&q=80',
+    alt: 'Mountain Lake Adventure'
   },
   {
-    url: 'https://picsum.photos/seed/beach-vacation/1920/1080',
-    alt: 'Beach Paradise'
+    url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80',
+    alt: 'Yosemite National Park'
   },
   {
-    url: 'https://picsum.photos/seed/family-travel/1920/1080',
-    alt: 'Family Adventures'
+    url: 'https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1920&q=80',
+    alt: 'Santorini Sunset'
   },
   {
-    url: 'https://picsum.photos/seed/mountain-hiking/1920/1080',
-    alt: 'Mountain Hiking'
+    url: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1920&q=80',
+    alt: 'Cinque Terre, Italy'
   },
   {
-    url: 'https://picsum.photos/seed/city-tour/1920/1080',
-    alt: 'Urban Discovery'
+    url: 'https://images.unsplash.com/photo-1493246507139-91e8bef99c02?auto=format&fit=crop&w=1920&q=80',
+    alt: 'Banff National Park'
   }
 ];
 

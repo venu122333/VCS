@@ -5,7 +5,8 @@ export enum TravelMood {
   CULTURAL = 'Cultural',
   FOODIE = 'Foodie',
   ROMANTIC = 'Romantic',
-  BUDGET = 'Budget-Friendly'
+  BUDGET = 'Budget-Friendly',
+  ENJOY = 'Enjoy'
 }
 
 export enum TravelerType {
@@ -44,6 +45,7 @@ export interface TourNavigator {
 }
 
 export interface TravelPlan {
+  id?: string;
   destination: string;
   duration: number;
   mood: TravelMood;
@@ -62,6 +64,7 @@ export interface TravelPlan {
   }[];
   isBudgetValid: boolean;
   minimumBudget?: number;
+  heroImage?: string;
 }
 
 export interface ChatMessage {
@@ -75,11 +78,4 @@ export interface ChatSession {
   title: string;
   messages: ChatMessage[];
   createdAt: Date;
-}
-
-export interface UserProfile {
-  email: string;
-  name: string;
-  pinCode?: string;
-  photoUrl?: string;
 }

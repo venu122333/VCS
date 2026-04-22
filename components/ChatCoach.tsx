@@ -7,11 +7,11 @@ import { GenerateContentResponse } from "@google/genai";
 interface ChatCoachProps {
   destination?: string;
   heroImage?: string;
+  fullPage?: boolean;
 }
 
-const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showLocationPreview, setShowLocationPreview] = useState(false);
+const ChatCoach: React.FC<ChatCoachProps> = ({ destination, fullPage }) => {
+  const [isOpen, setIsOpen] = useState(fullPage || false);
   const [showHistory, setShowHistory] = useState(false);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -21,26 +21,30 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
   const chatInstance = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (fullPage) setIsOpen(true);
+  }, [fullPage]);
+
+  // Listen for external open event
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-nomad-coach', handleOpen);
+    return () => window.removeEventListener('open-nomad-coach', handleOpen);
+  }, []);
+
   // Load history from localStorage
   useEffect(() => {
     const savedSessions = localStorage.getItem('nomadai_chats');
-    if (savedSessions) {
-      const parsed = JSON.parse(savedSessions);
-      setSessions(parsed);
-      if (parsed.length > 0) {
-        setCurrentSessionId(parsed[0].id);
-        setMessages(parsed[0].messages);
-      } else {
-        startNewChat();
-      }
-    } else {
-      startNewChat();
-    }
+    const parsed = savedSessions ? JSON.parse(savedSessions) : [];
+    setSessions(parsed);
+    
+    // Always start a new chat on load as requested
+    startNewChat();
   }, []);
 
   // Save current session to sessions and localStorage
   useEffect(() => {
-    if (currentSessionId && messages.length > 0) {
+    if (currentSessionId && messages.length > 1) { // Only save if more than initial message
       const updatedSessions = sessions.map(s => 
         s.id === currentSessionId ? { ...s, messages } : s
       );
@@ -49,7 +53,7 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
       if (!sessions.find(s => s.id === currentSessionId)) {
         const newSession: ChatSession = {
           id: currentSessionId,
-          title: messages[0]?.text.substring(0, 30) || 'New Chat',
+          title: messages[1]?.text.substring(0, 30) || 'New Chat',
           messages: messages,
           createdAt: new Date()
         };
@@ -64,7 +68,7 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
   useEffect(() => {
     if (!chatInstance.current) {
       chatInstance.current = createTravelChat(
-        "You are an expert travel coach with deep knowledge of global destinations, local customs, hidden gems, and travel logistics. You are friendly, encouraging, and provide concise, actionable advice."
+        "You are the NomadAI Ultra Coach ⚡, the world's fastest and most engaging travel advisor. Your goal is to answer in under 15 seconds. ALWAYS use emojis to make your answers pop and look fun 🌍✨. Be extremely enthusiastic, helpful, and provide high-speed, high-value advice. Use short, punchy formatting for readability."
       );
     }
   }, []);
@@ -81,7 +85,7 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
     setMessages([
       { 
         role: 'model', 
-        text: "Hi! I'm your NomadAI Travel Coach. Need some local tips or help refining your itinerary?", 
+        text: "Hey fellow traveler! ✈️ I'm your NomadAI Ultra Coach! ⚡ Need some lightning-fast tips or help refining your dream adventure? Let's go! 🚀✨", 
         timestamp: new Date() 
       }
     ]);
@@ -112,6 +116,21 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
     if (!input.trim() || isLoading) return;
 
     const userMsg: ChatMessage = { role: 'user', text: input, timestamp: new Date() };
+    
+    // Check for API key
+    const envKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    const hasKey = (envKey && envKey !== 'undefined') || localStorage.getItem('GEMINI_API_KEY');
+    
+    if (!hasKey) {
+      setMessages(prev => [...prev, userMsg, { 
+        role: 'model', 
+        text: "I'm sorry, but I need a Gemini API Key to function. Please click the Settings gear icon in the header to provide your API key.", 
+        timestamp: new Date() 
+      }]);
+      setInput('');
+      return;
+    }
+
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
@@ -139,60 +158,14 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
     }
   };
 
-  const handleNavigate = () => {
-    if (!destination) {
-      alert("Please enter a destination first!");
-      return;
-    }
-    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`;
-    window.open(url, '_blank');
-  };
-
   return (
-    <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-4">
-      {!isOpen && destination && (
-        <div className="relative flex flex-col items-end gap-2">
-          {showLocationPreview && (
-            <div className="absolute bottom-full right-0 mb-4 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-              {heroImage ? (
-                <div className="h-32 w-full relative">
-                  <img src={heroImage || null} alt={destination} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                </div>
-              ) : null}
-              <div className="p-4">
-                <h4 className="font-bold text-slate-900 truncate">{destination}</h4>
-                <p className="text-xs text-slate-500 mt-1">Ready to explore this destination?</p>
-                <button 
-                  onClick={handleNavigate}
-                  className="w-full mt-3 bg-blue-600 text-white text-xs font-bold py-2 rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <i className="fa-solid fa-location-arrow"></i> Open in Maps
-                </button>
-              </div>
-            </div>
-          )}
-          <button 
-            onMouseEnter={() => setShowLocationPreview(true)}
-            onMouseLeave={() => setShowLocationPreview(false)}
-            onClick={() => setShowLocationPreview(!showLocationPreview)}
-            className="w-12 h-12 bg-white text-blue-600 rounded-full shadow-xl flex items-center justify-center text-xl hover:bg-blue-50 transition-all hover:scale-110 active:scale-95 border border-blue-100 relative group overflow-hidden"
-            title="Locate on Maps"
-          >
-            {heroImage ? (
-              <img src={heroImage || null} className="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity absolute inset-0" alt={destination} />
-            ) : null}
-            <i className="fa-solid fa-location-dot relative z-10"></i>
-          </button>
-        </div>
-      )}
-      
-      <div className="flex items-end gap-4">
+    <div className={`flex flex-col ${fullPage ? 'h-full w-full items-stretch' : 'items-end'}`}>
+      <div className={`flex items-end gap-4 ${fullPage ? 'h-full w-full' : ''}`}>
         {isOpen && (
-        <div className="bg-white w-80 sm:w-[450px] h-[600px] rounded-3xl shadow-2xl flex border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className={`bg-white ${fullPage ? 'rounded-none sm:rounded-[40px] border-none' : 'rounded-3xl shadow-2xl border border-slate-200'} flex overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 ${fullPage ? 'w-full h-full' : 'w-80 sm:w-[450px] h-[600px]'}`}>
           
           {/* Sidebar */}
-          <div className={`${showHistory ? 'w-64' : 'w-0'} transition-all duration-300 bg-slate-900 text-white flex flex-col overflow-hidden`}>
+          <div className={`${showHistory ? (fullPage ? 'w-72' : 'w-64') : 'w-0'} transition-all duration-300 bg-slate-900 text-white flex flex-col overflow-hidden`}>
             <div className="p-4 border-b border-white/10 flex justify-between items-center">
               <h4 className="font-bold text-sm uppercase tracking-widest text-slate-400">History</h4>
               <button onClick={startNewChat} className="text-blue-400 hover:text-blue-300 text-xs font-bold">
@@ -209,7 +182,8 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
                   <span className="truncate flex-1 pr-2">{s.title}</span>
                   <button 
                     onClick={(e) => deleteSession(s.id, e)}
-                    className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity"
+                    className={`${s.id === currentSessionId ? 'text-blue-200 hover:text-white' : 'text-slate-400 hover:text-red-400'} transition-colors p-1.5 rounded-lg hover:bg-white/10`}
+                    title="Delete Chat"
                   >
                     <i className="fa-solid fa-trash-can text-xs"></i>
                   </button>
@@ -235,9 +209,6 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
                   <h3 className="font-semibold truncate max-w-[150px]">Nomad Coach</h3>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="hover:text-blue-200">
-                <i className="fa-solid fa-xmark"></i>
-              </button>
             </div>
             
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
@@ -286,7 +257,7 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, heroImage }) => {
         </div>
       )}
       
-      {!isOpen && (
+      {!isOpen && !fullPage && (
         <button 
           onClick={() => setIsOpen(true)}
           className="w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 group"

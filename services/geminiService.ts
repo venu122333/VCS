@@ -2,14 +2,44 @@
 import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import { TravelPlan, TravelMood, TravelerType } from "../types";
 
-// Helper to get the best available API key
 const getApiKey = () => {
-  return localStorage.getItem('NOMAD_AI_KEY') || process.env.API_KEY || '';
+  // First check if it's provided in the environment (AI Studio default)
+  const envKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+  if (envKey && envKey !== 'undefined') return envKey;
+  
+  // Then check localStorage (for standalone hosting like EdgeOne)
+  const localKey = typeof window !== 'undefined' ? localStorage.getItem('GEMINI_API_KEY') : null;
+  if (localKey) return localKey;
+  
+  return '';
 };
 
-// Function to get a fresh AI instance with the current key
+let aiInstance: GoogleGenAI | null = null;
+let lastUsedKey: string | null = null;
+
 const getAI = () => {
-  return new GoogleGenAI({ apiKey: getApiKey() });
+  const key = getApiKey();
+  if (!key) {
+    throw new Error('Gemini API Key is missing. Please provide it in the Settings.');
+  }
+  
+  if (!aiInstance || lastUsedKey !== key) {
+    aiInstance = new GoogleGenAI({ apiKey: key });
+    lastUsedKey = key;
+  }
+  return aiInstance;
+};
+
+const fetchWithRetry = async (fn: () => Promise<any>, retries = 3, delay = 1000): Promise<any> => {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries > 0 && (error.status === 429 || error.status === 500 || error.status === 503)) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchWithRetry(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
 };
 
 export const generateTravelPlan = async (
@@ -22,7 +52,6 @@ export const generateTravelPlan = async (
   budget: number | undefined,
   currencyInfo: string
 ): Promise<TravelPlan> => {
-  const ai = getAI();
   const budgetText = budget ? `The total budget for this trip is ${budget} ${currencyInfo}.` : `No specific budget provided, suggest a standard mid-range plan in ${currencyInfo}.`;
   const budgetLogic = budget ? `
   - Check if the provided budget of ${budget} ${currencyInfo} is realistic for a ${duration}-day trip to ${destination} for ${travelerCount} ${travelerType}(s).
@@ -35,39 +64,32 @@ export const generateTravelPlan = async (
   - Since no budget was provided, set "isBudgetValid" to true.
   - Provide a realistic mid-range budget estimation for the trip.`;
 
-  const prompt = `Create a detailed ${duration}-day travel plan for ${destination} with a ${mood} mood. 
-  This trip is for ${travelerCount} ${travelerType}(s).
-  ${budgetText}
+  const prompt = `Create a ${duration}-day travel plan for ${destination} (${mood} vibe). 
+  Travelers: ${travelerCount} ${travelerType}(s).
+  Budget: ${budgetText}
+  
+  CRITICAL SPEED & QUALITY INSTRUCTIONS:
+  - LEAST BUDGET FOCUS: If a budget is provided, your MISSION is to find the absolute best value. Prioritize high-quality but low-cost experiences.
+  - PRECISION ENGINEERING: Every minute counts. Organize the itinerary for maximum efficiency and minimum travel time between activities.
+  - FOCUS ON SPEED: Keep ALL text extremely brief. Summary: max 2 sentences. Activity descriptions: max 1 sentence.
+  - VILLAGES & RURAL AREAS: If ${destination} is a small village or rural town, prioritize local experiences, homestays, walking tours, and nature. Suggest nearby transport hubs if needed.
+  - ULTRA-LOW BUDGET: If the budget is tight, focus exclusively on free sights, street food, and hostels.
+  - SPECIFICITY: Use real place names. No generic "local cafe".
+  - HOTELS: Provide exactly 2 hotels.
+  - ACTIVITIES: Provide exactly 3 activities per day (Morning, Afternoon, Evening).
+  
   IMPORTANT BUDGET LOGIC: ${budgetLogic}
   User notes: ${additionalNotes}. 
   
-  CRITICAL INSTRUCTIONS:
-  - Tailor the activities and recommendations specifically for ${travelerCount} ${travelerType}(s).
-  - If the budget is low, prioritize FREE ATTRACTIONS, public parks, walking tours, and street food markets.
-  - Provide a list of the BEST 2-3 HOTELS that fit within the specified budget. For each hotel, provide:
-    * NAME (e.g., "The Grand Plaza Hotel")
-    * DESCRIPTION (Briefly why it's a good fit for the budget and traveler type)
-    * PRICE PER NIGHT (in ${currencyInfo})
-    * PHONE NUMBER (e.g., "+1-555-0123")
-    * LOCATION (Specific address or area)
-  - Provide information about the BEST TOUR NAVIGATOR (Tour Guide) for ${destination} that fits within the specified budget. 
-    * If a professional tour navigator or local guide service exists, provide their NAME, PHONE NUMBER, and a brief DESCRIPTION explaining why they are the best choice for this budget and traveler type.
-    * If no specific navigator information is available for this town/city, set the "tourNavigator" field to null.
-  - For every activity, provide a "location" field which contains the specific name and city of the place (e.g., "Bilal Restaurant, ${destination}").
-  - For HOTELS and RESTAURANTS, provide a "phoneNumber" field with a realistic phone number.
-  - Do NOT use generic terms like "a local restaurant" or "a nearby hotel". Always give a real or highly realistic name.
-  - BE CONCISE: For trips longer than 7 days, keep activity descriptions brief to ensure fast generation.
-  
-  Provide a professional and engaging summary, a day-by-day itinerary with specific activities, a packing list, local travel tips, and an estimated budget breakdown by category. 
-  Return the response in JSON format with currencyCode (e.g., "USD").`;
+  Return in JSON format with currencyCode (e.g., "USD"). Ensure concise responses for instant delivery.`;
 
-  const response = await ai.models.generateContent({
+  const result = await fetchWithRetry(() => getAI().models.generateContent({
     model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
       thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
       responseMimeType: "application/json",
-      maxOutputTokens: 4000,
+      maxOutputTokens: 2048,
       responseSchema: {
         type: Type.OBJECT,
         properties: {
@@ -100,7 +122,7 @@ export const generateTravelPlan = async (
               name: { type: Type.STRING },
               phoneNumber: { type: Type.STRING },
               description: { type: Type.STRING }
-            },
+              },
             required: ["name", "phoneNumber"]
           },
           itinerary: {
@@ -119,7 +141,7 @@ export const generateTravelPlan = async (
                       activity: { type: Type.STRING },
                       description: { type: Type.STRING },
                       location: { type: Type.STRING, description: "The specific name and address/area of the place (e.g. 'Bilal Restaurant, City Name')" },
-                      phoneNumber: { type: Type.STRING, description: "The phone number of the hotel or restaurant (if applicable)" },
+                      phoneNumber: { type: Type.STRING, description: "The phone number of the hotel or restaurant (if applicable)" }
                     },
                     required: ["time", "activity", "description", "location"]
                   }
@@ -151,69 +173,27 @@ export const generateTravelPlan = async (
         required: ["destination", "duration", "mood", "travelerType", "travelerCount", "summary", "currencyCode", "itinerary", "recommendedHotels", "packingList", "tips", "estimatedBudget"]
       }
     }
-  });
+  }));
 
-  return JSON.parse(response.text || '{}');
+  const plan: TravelPlan = JSON.parse(result.text || '{}');
+  return plan;
 };
 
 export const createTravelChat = (systemInstruction: string) => {
-  const ai = getAI();
-  return ai.chats.create({
+  return getAI().chats.create({
     model: 'gemini-3-flash-preview',
     config: {
-      systemInstruction: systemInstruction,
+      systemInstruction: `${systemInstruction} CRITICAL: Answer in max 3 sentences. Speed is priority #1. Be ultra-concise but extremely friendly with emojis.`,
+      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }
     },
   });
 };
 
 export const generateDestinationImage = async (destination: string, mood: string): Promise<string> => {
-  const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image',
-    contents: {
-      parts: [{ text: `A breathtaking, high-quality professional travel photography shot of ${destination} reflecting a ${mood} vibe, cinematic lighting, 8k resolution.` }]
-    },
-    config: {
-      imageConfig: {
-        aspectRatio: "16:9"
-      }
-    }
-  });
-
-  for (const part of response.candidates?.[0]?.content?.parts || []) {
-    if (part.inlineData) {
-      return `data:image/png;base64,${part.inlineData.data}`;
-    }
-  }
-  return `https://picsum.photos/seed/${destination}/1200/600`;
-};
-
-export const getTravelCost = async (location: string): Promise<{ type: 'flight' | 'car', cost: number, details: string }> => {
-  const ai = getAI();
-  const prompt = `Estimate the travel cost from ${location} to the nearest major international airport. 
-  If ${location} has an airport, provide the average flight cost to a popular international destination. 
-  If ${location} does not have an airport, provide the car/taxi cost to the nearest airport and then the flight cost.
-  Return the response in JSON format with the following fields:
-  - type: either "flight" or "car" (use "car" if a taxi to airport is needed first)
-  - cost: a single numerical value representing the total estimated cost in USD
-  - details: a brief explanation of the cost (e.g., "Taxi to X airport + flight to Y")`;
-
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          type: { type: Type.STRING, enum: ["flight", "car"] },
-          cost: { type: Type.NUMBER },
-          details: { type: Type.STRING }
-        },
-        required: ["type", "cost", "details"]
-      }
-    }
-  });
-
-  return JSON.parse(response.text || '{}');
+  // We use Unsplash for hero images to avoid heavy base64 strings that exceed Firestore's 1MB limit.
+  // We construct a query-based URL that Unsplash can resolve to a beautiful travel image.
+  const query = encodeURIComponent(`${destination} ${mood} landmark travel`);
+  return `https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&w=1600&q=80&sig=${query}`; 
+  // Note: While this still uses a fallback ID, in a production app one would use the Unsplash Search API.
+  // The key is avoiding the 2.5MB base64 data which was crashing the Firestore writes.
 };
