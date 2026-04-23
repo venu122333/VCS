@@ -49,14 +49,11 @@ const LoginView: React.FC<LoginViewProps> = ({ onGoogleLogin, isLoggingIn, error
           </div>
 
           <div className="mt-12 pt-8 border-t border-slate-50 text-center">
-            <div className="flex justify-center gap-3 mb-4">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <div className="w-2 h-2 rounded-full bg-violet-500" />
+            <div className="flex justify-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-orange-500" />
+              <div className="w-2 h-2 rounded-full bg-white border-2 border-blue-500" />
+              <div className="w-2 h-2 rounded-full bg-green-500" />
             </div>
-            <p className="text-[9px] text-slate-300 font-black uppercase tracking-[0.3em]">
-              © 2026 NomadAI Collective
-            </p>
           </div>
         </div>
       </motion.div>
