@@ -194,7 +194,16 @@ const App: React.FC = () => {
     try {
       await signInWithGoogle();
     } catch (err: any) {
-      setError('Login failed. Please try again.');
+      console.error("Login Error:", err);
+      if (err.code === 'auth/unauthorized-domain') {
+        setError(`Domain not authorized. Add "${window.location.hostname}" to authorized domains in Firebase Console.`);
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('Login window was blocked. Enable popups or use "Open in new tab".');
+      } else if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
+        setError('Login cancelled.');
+      } else {
+        setError(err.message || 'Login failed. Please try again.');
+      }
     } finally {
       setIsLoggingIn(false);
     }
@@ -341,7 +350,7 @@ const App: React.FC = () => {
   }
 
   if (!user) {
-    return <LoginView onGoogleLogin={handleGoogleLogin} isLoggingIn={isLoggingIn} />;
+    return <LoginView onGoogleLogin={handleGoogleLogin} isLoggingIn={isLoggingIn} error={error} />;
   }
 
   return (

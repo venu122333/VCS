@@ -12,14 +12,14 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 // Auth functions
 export const signInWithGoogle = async () => {
-  // Check if we are on mobile and NOT in an iframe
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const isInIframe = window.self !== window.top;
 
   try {
-    // For mobile devices NOT in an iframe, redirect is often more reliable
+    // In mobile APK/WebView, popups are almost always blocked.
+    // However, if we're in an iframe (like AI Studio preview), we MUST use popup.
     if (isMobile && !isInIframe) {
-      console.log("Mobile detected, using redirect...");
+      console.log("Mobile/APK environment detected, using redirect.");
       await signInWithRedirect(auth, googleProvider);
       return null;
     }
@@ -28,26 +28,18 @@ export const signInWithGoogle = async () => {
       const result = await signInWithPopup(auth, googleProvider);
       return result.user;
     } catch (popupError: any) {
-      console.log("Popup error:", popupError.code);
+      console.log("Popup failed, checking fallback:", popupError.code);
       
-      // If popup is blocked and we are on mobile, try redirect as a fallback
-      if ((popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/cancelled-popup-request' || popupError.code === 'auth/operation-not-supported-in-this-environment') && isMobile && !isInIframe) {
-        console.log("Popup failed on mobile, trying redirect...");
+      // Fallback to redirect if popup is blocked/unsupported and were on mobile
+      if (isMobile && !isInIframe) {
         await signInWithRedirect(auth, googleProvider);
         return null;
-      }
-      
-      if (isInIframe && isMobile) {
-        throw new Error("Login is often blocked in mobile previews. Please open the app in a new tab (click the 'Open in new tab' icon) to sign in.");
       }
       
       throw popupError;
     }
   } catch (error: any) {
-    if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
-      return null;
-    }
-    console.error("Error signing in with Google:", error);
+    console.error("Sign-in error:", error);
     throw error;
   }
 };

@@ -4,9 +4,10 @@ import { motion } from 'motion/react';
 interface LoginViewProps {
   onGoogleLogin: () => void;
   isLoggingIn: boolean;
+  error?: string;
 }
 
-const LoginView: React.FC<LoginViewProps> = ({ onGoogleLogin, isLoggingIn }) => {
+const LoginView: React.FC<LoginViewProps> = ({ onGoogleLogin, isLoggingIn, error }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <motion.div 
@@ -25,6 +26,13 @@ const LoginView: React.FC<LoginViewProps> = ({ onGoogleLogin, isLoggingIn }) => 
             <p className="text-slate-600 text-sm font-medium text-center px-4 leading-relaxed">
               Plan your next adventure with the power of Intelligence. Sign in to sync your travel vault across all devices.
             </p>
+
+            {error && (
+              <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl text-[11px] leading-relaxed font-bold animate-in fade-in slide-in-from-top-2">
+                <i className="fa-solid fa-circle-exclamation mr-2"></i>
+                {error}
+              </div>
+            )}
 
             <button
               onClick={onGoogleLogin}
