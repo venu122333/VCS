@@ -9,6 +9,7 @@ import HomeView from './components/views/HomeView';
 import ExploreView from './components/views/ExploreView';
 import ProfileView from './components/views/ProfileView';
 import PlannerView from './components/views/PlannerView';
+import DivineView from './components/views/DivineView';
 import { TravelPlan, TravelMood, TravelerType } from './types';
 import { generateTravelPlan, generateDestinationImage } from './services/geminiService';
 import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, getRedirectResult } from './firebase';
@@ -17,7 +18,7 @@ import { doc, setDoc, getDoc, collection, query, orderBy, onSnapshot, serverTime
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Compass, MessageSquare, User as UserIcon, Wand2 } from 'lucide-react';
 
-type activeView = 'HOME' | 'PLAN' | 'EXPLORE' | 'CHAT' | 'PROFILE' | 'ITINERARY';
+type activeView = 'HOME' | 'PLAN' | 'EXPLORE' | 'CHAT' | 'PROFILE' | 'ITINERARY' | 'DIVINE';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -29,6 +30,7 @@ const App: React.FC = () => {
   const [mood, setMood] = useState<TravelMood>(TravelMood.ADVENTUROUS);
   const [travelerType, setTravelerType] = useState<TravelerType>(TravelerType.COUPLE);
   const [travelerCount, setTravelerCount] = useState<number | ''>(2);
+  const [activitiesPerDay, setActivitiesPerDay] = useState<number | ''>(3);
   const [notes, setNotes] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [plan, setPlan] = useState<TravelPlan | null>(null);
@@ -69,6 +71,7 @@ const App: React.FC = () => {
           setError('Login failed. Please try again.');
         }
       } finally {
+        setIsAuthReady(true);
         setIsLoggingIn(false);
       }
     };
@@ -160,7 +163,17 @@ const App: React.FC = () => {
     setHeroImage(`https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80`);
     
     try {
-      const planPromise = generateTravelPlan(destination, duration as number, mood, travelerType, travelerCount as number, notes, budget as number, currencyInfo);
+      const planPromise = generateTravelPlan(
+        destination, 
+        duration as number, 
+        mood, 
+        travelerType, 
+        travelerCount as number, 
+        activitiesPerDay as number, 
+        notes, 
+        budget as number, 
+        currencyInfo
+      );
       const imagePromise = generateDestinationImage(destination, mood);
 
       const newPlan = await planPromise;
@@ -192,15 +205,21 @@ const App: React.FC = () => {
     setIsLoggingIn(true);
     setError('');
     try {
-      await signInWithGoogle();
+      const user = await signInWithGoogle();
+      if (!user) {
+        // User probably closed the popup, handle silently
+        setIsLoggingIn(false);
+        return;
+      }
     } catch (err: any) {
       console.error("Login Error:", err);
       if (err.code === 'auth/unauthorized-domain') {
         setError(`Domain not authorized. Add "${window.location.hostname}" to authorized domains in Firebase Console.`);
       } else if (err.code === 'auth/popup-blocked') {
         setError('Login window was blocked. Enable popups or use "Open in new tab".');
-      } else if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
-        setError('Login cancelled.');
+      } else if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        // Just in case it still throws instead of returning null
+        setError('');
       } else {
         setError(err.message || 'Login failed. Please try again.');
       }
@@ -216,6 +235,7 @@ const App: React.FC = () => {
     setMood(TravelMood.ADVENTUROUS);
     setTravelerType(TravelerType.COUPLE);
     setTravelerCount(2);
+    setActivitiesPerDay(3);
     setNotes('');
     setPlan(null);
     setSaveCount(0);
@@ -250,11 +270,29 @@ const App: React.FC = () => {
     }
 
     switch (currentView) {
-      case 'HOME': return <HomeView onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} onSetMood={setMood} onExplore={() => setCurrentView('EXPLORE')} />;
+      case 'HOME': return (
+        <HomeView 
+          onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} 
+          onSetMood={(m) => {
+            if (m === TravelMood.CULTURAL) {
+              setCurrentView('DIVINE');
+            } else {
+              setMood(m);
+              setCurrentView('PLAN');
+            }
+          }} 
+          onExplore={() => setCurrentView('EXPLORE')} 
+        />
+      );
       case 'EXPLORE': return <ExploreView onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} />;
       case 'PLAN': return (
         <PlannerView 
-          {...{ destination, setDestination, duration, setDuration, budget, setBudget, currencyInfo, setCurrencyInfo, mood, setMood, travelerType, setTravelerType, travelerCount, setTravelerCount, notes, setNotes, isGenerating, error, plan, heroImage }} 
+          {...{ 
+            destination, setDestination, duration, setDuration, budget, setBudget, 
+            currencyInfo, setCurrencyInfo, mood, setMood, travelerType, setTravelerType, 
+            travelerCount, setTravelerCount, activitiesPerDay, setActivitiesPerDay,
+            notes, setNotes, isGenerating, error, plan, heroImage 
+          }} 
           onGenerate={handleGenerate}
           onNewTrip={handleNewTrip}
           isViewingSavedPlan={isViewingSavedPlan}
@@ -279,6 +317,14 @@ const App: React.FC = () => {
               alert('Trip saved!');
             }).catch(err => handleFirestoreError(err, OperationType.WRITE, 'plans'));
           }}
+        />
+      );
+      case 'DIVINE': return (
+        <DivineView 
+          onStartJourney={() => {
+            setMood(TravelMood.CULTURAL);
+            setCurrentView('PLAN');
+          }} 
         />
       );
       case 'CHAT': return (
@@ -336,8 +382,34 @@ const App: React.FC = () => {
           </div>
           <ItineraryDisplay plan={plan} heroImage={heroImage} />
         </div>
-      ) : <HomeView onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} onSetMood={setMood} onExplore={() => setCurrentView('EXPLORE')} />;
-      default: return <HomeView onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} onSetMood={setMood} onExplore={() => setCurrentView('EXPLORE')} />;
+      ) : (
+        <HomeView 
+          onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} 
+          onSetMood={(m) => {
+            if (m === TravelMood.CULTURAL) {
+              setCurrentView('DIVINE');
+            } else {
+              setMood(m);
+              setCurrentView('PLAN');
+            }
+          }} 
+          onExplore={() => setCurrentView('EXPLORE')} 
+        />
+      );
+      default: return (
+        <HomeView 
+          onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} 
+          onSetMood={(m) => {
+            if (m === TravelMood.CULTURAL) {
+              setCurrentView('DIVINE');
+            } else {
+              setMood(m);
+              setCurrentView('PLAN');
+            }
+          }} 
+          onExplore={() => setCurrentView('EXPLORE')} 
+        />
+      );
     }
   };
 

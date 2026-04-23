@@ -98,6 +98,24 @@ export const POPULAR_DESTINATIONS: Destination[] = [
     description: 'A cosmopolitan city with stunning architecture and vibrant street life.',
     famousFor: 'Sagrada Família',
     category: 'Popular'
+  },
+  {
+    id: 'new-york',
+    name: 'New York City',
+    country: 'USA',
+    image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80',
+    description: 'The city that never sleeps, with iconic skyline and vibrant energy.',
+    famousFor: 'Times Square',
+    category: 'Popular'
+  },
+  {
+    id: 'dubai',
+    name: 'Dubai',
+    country: 'UAE',
+    image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
+    description: 'Luxury shopping, ultramodern architecture, and a lively nightlife scene.',
+    famousFor: 'Burj Khalifa',
+    category: 'Popular'
   }
 ];
 

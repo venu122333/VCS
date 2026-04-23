@@ -2,7 +2,7 @@ import React from 'react';
 import HeroSlideshow from '../HeroSlideshow';
 import ItineraryDisplay from '../ItineraryDisplay';
 import { TravelMood, TravelerType, TravelPlan } from '../../types';
-import { Wand2, MapPin, Users, Calendar, Wallet, Globe, Sparkles, CheckCircle2, Save } from 'lucide-react';
+import { Wand2, MapPin, Users, Calendar, Wallet, Globe, Sparkles, CheckCircle2, Save, Compass } from 'lucide-react';
 
 interface PlannerViewProps {
   destination: string;
@@ -19,6 +19,8 @@ interface PlannerViewProps {
   setTravelerType: (val: TravelerType) => void;
   travelerCount: number | '';
   setTravelerCount: (val: number | '') => void;
+  activitiesPerDay: number | '';
+  setActivitiesPerDay: (val: number | '') => void;
   notes: string;
   setNotes: (val: string) => void;
   isGenerating: boolean;
@@ -40,6 +42,7 @@ const PlannerView: React.FC<PlannerViewProps> = ({
   mood, setMood,
   travelerType, setTravelerType,
   travelerCount, setTravelerCount,
+  activitiesPerDay, setActivitiesPerDay,
   notes, setNotes,
   isGenerating, onGenerate,
   onNewTrip,
@@ -141,7 +144,7 @@ const PlannerView: React.FC<PlannerViewProps> = ({
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                  <Users className="w-3 h-3 text-blue-600" /> Count
+                  <Users className="w-3 h-3 text-blue-600" /> No. of Travellers
                 </label>
                 <input 
                   type="number" 
@@ -161,6 +164,19 @@ const PlannerView: React.FC<PlannerViewProps> = ({
                 type="number" 
                 value={duration}
                 onChange={(e) => setDuration(e.target.value === '' ? '' : parseInt(e.target.value))}
+                className="w-full bg-slate-50 border-none rounded-2xl py-4 px-4 focus:ring-2 focus:ring-blue-600 transition-all font-bold text-slate-900"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <Compass className="w-3 h-3 text-blue-600" /> Trips Per Day
+              </label>
+              <input 
+                type="number" 
+                value={activitiesPerDay}
+                onChange={(e) => setActivitiesPerDay(e.target.value === '' ? '' : parseInt(e.target.value))}
+                placeholder="e.g. 3"
                 className="w-full bg-slate-50 border-none rounded-2xl py-4 px-4 focus:ring-2 focus:ring-blue-600 transition-all font-bold text-slate-900"
               />
             </div>

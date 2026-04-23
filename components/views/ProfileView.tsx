@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { User, LogOut, Settings, Bell, Shield, CreditCard, ChevronRight, Camera, Trash2 } from 'lucide-react';
+import { User, LogOut, Settings, Bell, Shield, CreditCard, ChevronRight, Camera, Trash2, Wand2 } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { TravelPlan } from '../../types';
 
@@ -88,6 +88,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onLogout, savedPlans, o
           { icon: Bell, title: 'Notifications', sub: 'Arrival alerts, flight updates', color: 'text-indigo-600', bg: 'bg-indigo-50' },
           { icon: Shield, title: 'Privacy & Safety', sub: 'Manage your data and security', color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { icon: User, title: 'Travel Partners', sub: 'Shared plans and contacts', color: 'text-rose-600', bg: 'bg-rose-50' },
+          { icon: Wand2, title: '24/7 Travel Coach', sub: 'AI assistance anytime', color: 'text-blue-600', bg: 'bg-blue-50' },
         ].map((item, i) => (
           <button 
             key={i} 

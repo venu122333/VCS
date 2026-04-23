@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, ArrowRight, Compass, Sparkles, Heart, Zap, Coffee } from 'lucide-react';
 import { TravelMood } from '../../types';
 import { shuffleDestinations } from '../../constants/destinations';
@@ -11,12 +11,14 @@ interface HomeViewProps {
 }
 
 const HomeView: React.FC<HomeViewProps> = ({ onPlanTrip, onSetMood, onExplore }) => {
-  const shuffledDestinations = useMemo(() => shuffleDestinations(10), []);
+  const shuffledDestinations = useMemo(() => shuffleDestinations(12), []);
 
   const moodCards = [
-    { mood: TravelMood.RELAXED, label: 'Relaxed', sub: 'Weekend Relaxation', icon: Coffee, color: 'bg-orange-500', iconColor: 'text-orange-100' },
-    { mood: TravelMood.ADVENTUROUS, label: 'Excited', sub: 'Adventure Awaits', icon: Zap, color: 'bg-blue-600', iconColor: 'text-blue-100' },
-    { mood: TravelMood.CULTURAL, label: 'Curious', sub: 'Cultural Experience', icon: Heart, color: 'bg-rose-500', iconColor: 'text-rose-100' },
+    { mood: TravelMood.ADVENTUROUS, label: 'Excited', sub: 'Adventure Awaits', icon: Zap, color: 'bg-blue-600', iconColor: 'text-blue-100', image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.CULTURAL, label: 'Divine', sub: 'Temples & Sacred Sites', icon: () => <span className="text-lg leading-none">🙏</span>, color: 'bg-rose-500', iconColor: 'text-rose-100', image: 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.RELAXED, label: 'Relaxed', sub: 'Weekend Relaxation', icon: Coffee, color: 'bg-orange-500', iconColor: 'text-orange-100', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.FOODIE, label: 'Hungry', sub: 'Local Gastronomy', icon: Coffee, color: 'bg-emerald-500', iconColor: 'text-emerald-100', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.ROMANTIC, label: 'Loving', sub: 'Romantic Escape', icon: Heart, color: 'bg-pink-500', iconColor: 'text-pink-100', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=400&h=500&q=80' },
   ];
 
   return (
@@ -41,8 +43,12 @@ const HomeView: React.FC<HomeViewProps> = ({ onPlanTrip, onSetMood, onExplore })
               onClick={() => onSetMood(card.mood)}
               className="relative flex-none w-[200px] aspect-[4/5] rounded-[32px] overflow-hidden cursor-pointer group shadow-lg shadow-slate-100"
             >
-              <div className={`absolute inset-0 opacity-80 group-hover:opacity-100 transition-all duration-500`} 
-                style={{ background: `url(https://picsum.photos/seed/${card.mood}/400/500) center/cover` }} />
+              <div 
+                className="absolute inset-0 opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                style={{ 
+                  background: `url(${card.image}) center/cover`,
+                }} 
+              />
               <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent`} />
               
               <div className="absolute bottom-6 left-6 right-6">
@@ -54,7 +60,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onPlanTrip, onSetMood, onExplore })
                 </h3>
               </div>
               
-              <div className={`absolute top-6 left-6 p-2 rounded-xl scale-75 origin-top-left ${card.color}`}>
+              <div className={`absolute top-6 left-6 w-10 h-10 flex items-center justify-center rounded-xl scale-75 origin-top-left ${card.color}`}>
                 <card.icon className={card.iconColor} />
               </div>
             </motion.div>

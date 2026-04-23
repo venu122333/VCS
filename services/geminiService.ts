@@ -48,13 +48,14 @@ export const generateTravelPlan = async (
   mood: TravelMood,
   travelerType: TravelerType,
   travelerCount: number,
+  activitiesPerDay: number,
   additionalNotes: string,
   budget: number | undefined,
   currencyInfo: string
 ): Promise<TravelPlan> => {
   const budgetText = budget ? `The total budget for this trip is ${budget} ${currencyInfo}.` : `No specific budget provided, suggest a standard mid-range plan in ${currencyInfo}.`;
   const budgetLogic = budget ? `
-  - Check if the provided budget of ${budget} ${currencyInfo} is realistic for a ${duration}-day trip to ${destination} for ${travelerCount} ${travelerType}(s).
+  - Check if the provided budget of ${budget} ${currencyInfo} is realistic for a ${duration}-day trip to ${destination} for a total of ${travelerCount} travelers (category: ${travelerType}).
   - Be EXTREMELY flexible and creative: if the budget is low, suggest ultra-budget options like hostels, street food, walking tours, and free public attractions.
   - ONLY set "isBudgetValid" to false if the amount is mathematically impossible (e.g., 10 or 20 ${currencyInfo} for multiple days) where it wouldn't even cover a single basic meal or local bus fare.
   - If "isBudgetValid" is false, provide the "minimumBudget" (the absolute lowest price) required for a survival-level trip (hostels, basic local food).
@@ -64,11 +65,16 @@ export const generateTravelPlan = async (
   - Since no budget was provided, set "isBudgetValid" to true.
   - Provide a realistic mid-range budget estimation for the trip.`;
 
+  const moodInstructions = mood === TravelMood.CULTURAL ? 
+    "- CULTURAL MOOD FOCUS: The user wants a DIVINE and SPIRITUAL experience. Prioritize FAMOUS TEMPLES, sacred sites, religious landmarks, and places of worship (God/Divine focus)." : 
+    "";
+
   const prompt = `Create a ${duration}-day travel plan for ${destination} (${mood} vibe). 
-  Travelers: ${travelerCount} ${travelerType}(s).
+  Total Travelers (individual members): ${travelerCount} (Traveler category: ${travelerType}).
   Budget: ${budgetText}
   
   CRITICAL SPEED & QUALITY INSTRUCTIONS:
+  ${moodInstructions}
   - LEAST BUDGET FOCUS: If a budget is provided, your MISSION is to find the absolute best value. Prioritize high-quality but low-cost experiences.
   - PRECISION ENGINEERING: Every minute counts. Organize the itinerary for maximum efficiency and minimum travel time between activities.
   - FOCUS ON SPEED: Keep ALL text extremely brief. Summary: max 2 sentences. Activity descriptions: max 1 sentence.
@@ -76,7 +82,7 @@ export const generateTravelPlan = async (
   - ULTRA-LOW BUDGET: If the budget is tight, focus exclusively on free sights, street food, and hostels.
   - SPECIFICITY: Use real place names. No generic "local cafe".
   - HOTELS: Provide exactly 2 hotels.
-  - ACTIVITIES: Provide exactly 3 activities per day (Morning, Afternoon, Evening).
+  - ACTIVITIES: Provide exactly ${activitiesPerDay} activities per day. Distribute them logically throughout the day (e.g., if ${activitiesPerDay} is 2, do Morning and Afternoon. If it is 5, spread them out).
   
   IMPORTANT BUDGET LOGIC: ${budgetLogic}
   User notes: ${additionalNotes}. 
