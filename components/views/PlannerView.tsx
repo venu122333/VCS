@@ -1,6 +1,6 @@
 import React from 'react';
 import HeroSlideshow from '../HeroSlideshow';
-import ItineraryDisplay from '../ItineraryDisplay';
+import ItineraryDisplay from './ItineraryDisplay';
 import { TravelMood, TravelerType, TravelPlan } from '../../types';
 import { Wand2, MapPin, Users, Calendar, Wallet, Globe, Sparkles, CheckCircle2, Save, Compass } from 'lucide-react';
 

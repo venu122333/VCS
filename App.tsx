@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ChatCoach from './components/ChatCoach';
-import ItineraryDisplay from './components/ItineraryDisplay';
+import ItineraryDisplay from './components/views/ItineraryDisplay';
 import SettingsModal from './components/SettingsModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoginView from './components/views/LoginView';
