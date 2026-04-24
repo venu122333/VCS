@@ -4,10 +4,10 @@ import { Search, MapPin, Grid, List, TrendingUp, Filter } from 'lucide-react';
 import { POPULAR_DESTINATIONS } from '../../constants/destinations';
 
 interface ExploreViewProps {
-  onPlanTrip: (destination: string) => void;
+  onViewDetails: (destination: string) => void;
 }
 
-const ExploreView: React.FC<ExploreViewProps> = ({ onPlanTrip }) => {
+const ExploreView: React.FC<ExploreViewProps> = ({ onViewDetails }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<'All' | 'Village' | 'Popular' | 'Metropolis'>('All');
 
@@ -95,7 +95,9 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onPlanTrip }) => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="group bg-white rounded-[32px] overflow-hidden border border-slate-50 shadow-sm hover:shadow-xl transition-all p-2"
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onViewDetails(dest.name)}
+                className="group cursor-pointer bg-white rounded-[32px] overflow-hidden border border-slate-50 shadow-sm hover:shadow-xl transition-all p-2"
               >
                 <div className="relative aspect-video rounded-[24px] overflow-hidden">
                   <img src={dest.image} alt={dest.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
@@ -104,22 +106,16 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onPlanTrip }) => {
                       VILLAGE
                     </div>
                   )}
-                  <button 
-                    onClick={() => onPlanTrip(dest.name)}
-                    className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-2xl text-slate-900 shadow-lg scale-0 group-hover:scale-100 transition-transform hover:bg-blue-600 hover:text-white"
-                  >
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
                 </div>
                 <div className="p-4 space-y-2">
                   <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-bold text-slate-900">{dest.name}</h3>
-                    <div className="flex items-center gap-1 text-slate-400 text-xs">
+                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{dest.name}</h3>
+                    <div className="flex items-center gap-1 text-slate-400 text-[10px] font-black uppercase tracking-widest">
                       <MapPin className="w-3 h-3" />
                       {dest.country}
                     </div>
                   </div>
-                  <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">{dest.description}</p>
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed font-medium">{dest.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -143,11 +139,5 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onPlanTrip }) => {
     </div>
   );
 };
-
-const ArrowRight = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-  </svg>
-);
 
 export default ExploreView;

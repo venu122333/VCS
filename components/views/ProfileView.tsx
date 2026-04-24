@@ -1,36 +1,101 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { User, LogOut, Settings, Bell, Shield, CreditCard, ChevronRight, Camera, Trash2, Wand2 } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { TravelPlan } from '../../types';
+import ImageCropper from '../ImageCropper';
 
 interface ProfileViewProps {
   user: FirebaseUser | null;
+  userProfile?: { photoURL?: string } | null;
   onLogout: () => void;
   savedPlans: TravelPlan[];
   onOpenSettings: () => void;
   onViewPlan: (plan: TravelPlan) => void;
   onDeletePlan: (id: string) => void;
+  onUpdateAvatar: (url: string) => void;
 }
 
-const ProfileView: React.FC<ProfileViewProps> = ({ user, onLogout, savedPlans, onOpenSettings, onViewPlan, onDeletePlan }) => {
-  const [avatarUrl, setAvatarUrl] = useState(user?.photoURL || `https://ui-avatars.com/api/?name=${user?.displayName || 'User'}&background=random`);
+const ProfileView: React.FC<ProfileViewProps> = ({ user, userProfile, onLogout, savedPlans, onOpenSettings, onViewPlan, onDeletePlan, onUpdateAvatar }) => {
+  const isCustomAvatar = userProfile?.photoURL?.startsWith('data:');
+  const avatarUrl = (isCustomAvatar ? userProfile?.photoURL : user?.photoURL) || userProfile?.photoURL || `https://ui-avatars.com/api/?name=${user?.displayName || 'User'}&background=random`;
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAvatarUrl(reader.result as string);
+        setSelectedImage(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCropComplete = (croppedImage: string) => {
+    onUpdateAvatar(croppedImage);
+    setSelectedImage(null);
   };
 
   const initials = user?.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
 
   return (
     <div className="pb-24 pt-6 px-4 max-w-7xl mx-auto space-y-8">
+      <AnimatePresence>
+        {selectedImage && (
+          <ImageCropper
+            image={selectedImage}
+            onCropComplete={handleCropComplete}
+            onClose={() => setSelectedImage(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6"
+            >
+              <div className="flex flex-col items-center justify-center text-center space-y-4">
+                <div className="p-4 bg-rose-50 rounded-full text-rose-500">
+                  <LogOut className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Are you sure you want to log out?</h3>
+                  <p className="text-sm text-slate-500 mt-2">You will need to sign back in to access your saved trips.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 py-3 px-4 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLogoutConfirm(false);
+                    onLogout();
+                  }}
+                  className="flex-1 py-3 px-4 bg-rose-500 text-white font-bold rounded-2xl hover:bg-rose-600 transition-colors"
+                >
+                  Log Out
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Profile Header */}
       <section className="bg-white rounded-[40px] p-8 shadow-xl shadow-slate-100 border border-slate-50 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600" />
@@ -73,7 +138,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onLogout, savedPlans, o
               <Settings className="w-6 h-6" />
             </button>
             <button 
-              onClick={onLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               className="p-4 rounded-2xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all"
             >
               <LogOut className="w-6 h-6" />

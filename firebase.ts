@@ -136,13 +136,6 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 // Test connection and log state (silent failure is preferred for better UX)
 async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    // Only log significant connectivity errors, ignore transient transport warnings
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn("NomadAI: Working in offline mode. Changes will sync when back online.");
-    }
-  }
+  // Disabled for faster boot, Firestore will reconnect automatically
 }
 testConnection();

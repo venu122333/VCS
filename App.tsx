@@ -10,6 +10,7 @@ import ExploreView from './components/views/ExploreView';
 import ProfileView from './components/views/ProfileView';
 import PlannerView from './components/views/PlannerView';
 import DivineView from './components/views/DivineView';
+import DestinationDetailView from './components/views/DestinationDetailView';
 import { TravelPlan, TravelMood, TravelerType } from './types';
 import { generateTravelPlan, generateDestinationImage } from './services/geminiService';
 import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, getRedirectResult } from './firebase';
@@ -18,11 +19,12 @@ import { doc, setDoc, getDoc, collection, query, orderBy, onSnapshot, serverTime
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Compass, MessageSquare, User as UserIcon, Wand2 } from 'lucide-react';
 
-type activeView = 'HOME' | 'PLAN' | 'EXPLORE' | 'CHAT' | 'PROFILE' | 'ITINERARY' | 'DIVINE';
+type activeView = 'HOME' | 'PLAN' | 'EXPLORE' | 'CHAT' | 'PROFILE' | 'ITINERARY' | 'DIVINE' | 'DESTINATION_DETAIL';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<activeView>('HOME');
+  const [selectedDestinationName, setSelectedDestinationName] = useState<string | null>(null);
   const [destination, setDestination] = useState('');
   const [duration, setDuration] = useState<number | ''>(3);
   const [budget, setBudget] = useState<number | ''>('');
@@ -43,6 +45,7 @@ const App: React.FC = () => {
   const [savedPlans, setSavedPlans] = useState<TravelPlan[]>([]);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ photoURL?: string } | null>(null);
 
   const hasApiKey = () => {
     const envKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
@@ -52,15 +55,16 @@ const App: React.FC = () => {
   };
 
   const loadingMessages = [
-    'Consulting local experts...',
-    'Finding hidden gems...',
-    'Optimizing route...',
-    'Checking budget...',
-    'Finalizing details...',
+    'Initializing AI Architect...',
+    'Curating local experiences...',
+    'Optimizing travel routes...',
+    'Drafting final itinerary...',
+    'Polishing your journey...',
   ];
 
   useEffect(() => {
     let unsubscribePlans: (() => void) | null = null;
+    let unsubscribeUser: (() => void) | null = null;
 
     const checkRedirect = async () => {
       try {
@@ -75,33 +79,51 @@ const App: React.FC = () => {
         setIsLoggingIn(false);
       }
     };
-    checkRedirect();
+    
+    // Non-blocking redirect check to speed up perceived boot
+    setTimeout(checkRedirect, 0);
 
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      // Cleanup previous plans subscription if it exists
+      // If we got a user, we can immediately say auth is ready
+      if (currentUser) setIsAuthReady(true);
+      
+      // Cleanup previous plans and userProfile subscription if it exists
       if (unsubscribePlans) {
         unsubscribePlans();
         unsubscribePlans = null;
       }
-
+      
+      if (unsubscribeUser) {
+        unsubscribeUser();
+        unsubscribeUser = null;
+      }
+      
       setUser(currentUser);
       setIsAuthReady(true);
-
+      
       if (currentUser) {
         const userRef = doc(db, 'users', currentUser.uid);
-        const userData: any = {
-          uid: currentUser.uid,
-          displayName: currentUser.displayName,
-          email: currentUser.email,
-          photoURL: currentUser.photoURL,
-          updatedAt: serverTimestamp()
-        };
 
-        // For new users, we need to ensure createdAt is set to satisfy security rules
+        // Listen for user document changes
+        unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setUserProfile(docSnap.data());
+          }
+        });
+
+        // Initialize/Sync user document
         getDoc(userRef).then((docSnap) => {
+          let userData: any = {
+            uid: currentUser.uid,
+            displayName: currentUser.displayName,
+            email: currentUser.email,
+            updatedAt: serverTimestamp()
+          };
+
           if (!docSnap.exists()) {
             userData.createdAt = serverTimestamp();
           }
+          
           setDoc(userRef, userData, { merge: true }).catch(err => handleFirestoreError(err, OperationType.WRITE, `users/${currentUser.uid}`));
         }).catch(err => handleFirestoreError(err, OperationType.GET, `users/${currentUser.uid}`));
 
@@ -128,6 +150,7 @@ const App: React.FC = () => {
     return () => {
       unsubscribeAuth();
       if (unsubscribePlans) unsubscribePlans();
+      if (unsubscribeUser) unsubscribeUser();
     };
   }, []);
 
@@ -272,7 +295,10 @@ const App: React.FC = () => {
     switch (currentView) {
       case 'HOME': return (
         <HomeView 
-          onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} 
+          onViewDetails={(dest) => { 
+            setSelectedDestinationName(dest); 
+            setCurrentView('DESTINATION_DETAIL'); 
+          }} 
           onSetMood={(m) => {
             if (m === TravelMood.CULTURAL) {
               setCurrentView('DIVINE');
@@ -284,7 +310,24 @@ const App: React.FC = () => {
           onExplore={() => setCurrentView('EXPLORE')} 
         />
       );
-      case 'EXPLORE': return <ExploreView onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} />;
+      case 'EXPLORE': return (
+        <ExploreView 
+          onViewDetails={(dest) => { 
+            setSelectedDestinationName(dest); 
+            setCurrentView('DESTINATION_DETAIL'); 
+          }} 
+        />
+      );
+      case 'DESTINATION_DETAIL': return selectedDestinationName ? (
+        <DestinationDetailView 
+          destinationName={selectedDestinationName}
+          onBack={() => setCurrentView('EXPLORE')}
+          onPlanTrip={() => {
+            setDestination(selectedDestinationName);
+            setCurrentView('PLAN');
+          }}
+        />
+      ) : null;
       case 'PLAN': return (
         <PlannerView 
           {...{ 
@@ -337,9 +380,20 @@ const App: React.FC = () => {
       case 'PROFILE': return (
         <ProfileView 
           user={user} 
+          userProfile={userProfile}
           onLogout={logout} 
           savedPlans={savedPlans} 
           onOpenSettings={() => setShowSettings(true)} 
+          onUpdateAvatar={(url) => {
+            if (user) {
+              const userRef = doc(db, 'users', user.uid);
+              setDoc(userRef, { 
+                photoURL: url,
+                updatedAt: serverTimestamp()
+              }, { merge: true })
+                .catch(err => handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`));
+            }
+          }}
           onViewPlan={(p) => { 
             setPlan(p); 
             setHeroImage(p.heroImage || ''); 
@@ -384,7 +438,10 @@ const App: React.FC = () => {
         </div>
       ) : (
         <HomeView 
-          onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} 
+          onViewDetails={(dest) => { 
+            setSelectedDestinationName(dest); 
+            setCurrentView('DESTINATION_DETAIL'); 
+          }} 
           onSetMood={(m) => {
             if (m === TravelMood.CULTURAL) {
               setCurrentView('DIVINE');
@@ -398,7 +455,10 @@ const App: React.FC = () => {
       );
       default: return (
         <HomeView 
-          onPlanTrip={(dest) => { setDestination(dest); setCurrentView('PLAN'); }} 
+          onViewDetails={(dest) => { 
+            setSelectedDestinationName(dest); 
+            setCurrentView('DESTINATION_DETAIL'); 
+          }} 
           onSetMood={(m) => {
             if (m === TravelMood.CULTURAL) {
               setCurrentView('DIVINE');
@@ -430,6 +490,7 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-white flex flex-col font-sans selection:bg-blue-100 selection:text-blue-700">
         <Header 
           user={user} 
+          userProfile={userProfile}
           onLogout={logout} 
           onOpenProfile={() => setCurrentView('PROFILE')}
           onOpenSettings={() => setShowSettings(true)}

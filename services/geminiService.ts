@@ -55,47 +55,40 @@ export const generateTravelPlan = async (
 ): Promise<TravelPlan> => {
   const budgetText = budget ? `The total budget for this trip is ${budget} ${currencyInfo}.` : `No specific budget provided, suggest a standard mid-range plan in ${currencyInfo}.`;
   const budgetLogic = budget ? `
-  - Check if the provided budget of ${budget} ${currencyInfo} is realistic for a ${duration}-day trip to ${destination} for a total of ${travelerCount} travelers (category: ${travelerType}).
-  - Be EXTREMELY flexible and creative: if the budget is low, suggest ultra-budget options like hostels, street food, walking tours, and free public attractions.
-  - ONLY set "isBudgetValid" to false if the amount is mathematically impossible (e.g., 10 or 20 ${currencyInfo} for multiple days) where it wouldn't even cover a single basic meal or local bus fare.
-  - If "isBudgetValid" is false, provide the "minimumBudget" (the absolute lowest price) required for a survival-level trip (hostels, basic local food).
-  - If "isBudgetValid" is false, still provide an "Ultra-Budget" itinerary as a suggestion, but clearly state in the summary that the budget is extremely tight/invalid and suggest the minimum amount.
-  - If the budget is valid (even if very low), set "isBudgetValid" to true.
-  - Ensure the estimated costs stay within or as close as possible to the ${budget} ${currencyInfo} limit.` : `
-  - Since no budget was provided, set "isBudgetValid" to true.
-  - Provide a realistic mid-range budget estimation for the trip.`;
+  - Your MISSION is to find the ABSOLUTE BEST VALUE for ${budget} ${currencyInfo}.
+  - Prioritize high-quality but low-cost experiences (walking tours, local markets, public parks).
+  - If the budget is low, suggest hostels with great reviews or budget guesthouses.
+  - CRITICAL RULE: The sum of all 'amount' values in the 'estimatedBudget' array MUST be exactly equal to or less than ${budget}. NEVER exceed this amount.
+  - Be EXTREMELY creative: if the budget is tight, focus on street food, free cultural sights, and public transit.` : `
+  - Since no budget was provided, assume the user wants the "Best Value" (High-quality results for minimal spending).
+  - Provide a realistic yet affordable estimation for the trip.`;
 
   const moodInstructions = mood === TravelMood.CULTURAL ? 
-    "- CULTURAL MOOD FOCUS: The user wants a DIVINE and SPIRITUAL experience. Prioritize FAMOUS TEMPLES, sacred sites, religious landmarks, and places of worship (God/Divine focus)." : 
-    "";
+    "- DIVINE & SPIRITUAL FOCUS: Prioritize FAMOUS TEMPLES, sacred sites, and places of worship. Focus on peace and spiritual richness (God/Divine focus)." : 
+    "- BEST VALUE FOCUS: Select activities that provide a superior local experience for the least amount of money.";
 
-  const prompt = `Create a ${duration}-day travel plan for ${destination} (${mood} vibe). 
-  Total Travelers (individual members): ${travelerCount} (Traveler category: ${travelerType}).
+  const prompt = `Plan a ${duration}-day trip to ${destination} (${mood}). 
+  Travelers: ${travelerCount} ${travelerType}.
   Budget: ${budgetText}
   
-  CRITICAL SPEED & QUALITY INSTRUCTIONS:
+  MISSION: LEAST MONEY, BEST EXPERIENCE. Find budget hidden gems.
+  
+  BUDGET LOGIC:
+  ${budgetLogic}
+  
+  SPEED RULES:
   ${moodInstructions}
-  - LEAST BUDGET FOCUS: If a budget is provided, your MISSION is to find the absolute best value. Prioritize high-quality but low-cost experiences.
-  - PRECISION ENGINEERING: Every minute counts. Organize the itinerary for maximum efficiency and minimum travel time between activities.
-  - FOCUS ON SPEED: Keep ALL text extremely brief. Summary: max 2 sentences. Activity descriptions: max 1 sentence.
-  - VILLAGES & RURAL AREAS: If ${destination} is a small village or rural town, prioritize local experiences, homestays, walking tours, and nature. Suggest nearby transport hubs if needed.
-  - ULTRA-LOW BUDGET: If the budget is tight, focus exclusively on free sights, street food, and hostels.
-  - SPECIFICITY: Use real place names. No generic "local cafe".
-  - HOTELS: Provide exactly 2 hotels.
-  - ACTIVITIES: Provide exactly ${activitiesPerDay} activities per day. Distribute them logically throughout the day (e.g., if ${activitiesPerDay} is 2, do Morning and Afternoon. If it is 5, spread them out).
-  
-  IMPORTANT BUDGET LOGIC: ${budgetLogic}
-  User notes: ${additionalNotes}. 
-  
-  Return in JSON format with currencyCode (e.g., "USD"). Ensure concise responses for instant delivery.`;
+  - 1-sentence descriptions ONLY.
+  - EXACTLY ${activitiesPerDay} activities/day. Do not provide more or less than ${activitiesPerDay} activities per day.
+  - JSON only. NO YAPPING.`;
 
   const result = await fetchWithRetry(() => getAI().models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.1-flash-lite-preview",
     contents: prompt,
     config: {
       thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
       responseMimeType: "application/json",
-      maxOutputTokens: 2048,
+      maxOutputTokens: 1536,
       responseSchema: {
         type: Type.OBJECT,
         properties: {
@@ -146,8 +139,8 @@ export const generateTravelPlan = async (
                       time: { type: Type.STRING },
                       activity: { type: Type.STRING },
                       description: { type: Type.STRING },
-                      location: { type: Type.STRING, description: "The specific name and address/area of the place (e.g. 'Bilal Restaurant, City Name')" },
-                      phoneNumber: { type: Type.STRING, description: "The phone number of the hotel or restaurant (if applicable)" }
+                      location: { type: Type.STRING },
+                      phoneNumber: { type: Type.STRING }
                     },
                     required: ["time", "activity", "description", "location"]
                   }
@@ -187,7 +180,7 @@ export const generateTravelPlan = async (
 
 export const createTravelChat = (systemInstruction: string) => {
   return getAI().chats.create({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3.1-flash-lite-preview',
     config: {
       systemInstruction: `${systemInstruction} CRITICAL: Answer in max 3 sentences. Speed is priority #1. Be ultra-concise but extremely friendly with emojis.`,
       thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }
@@ -196,10 +189,98 @@ export const createTravelChat = (systemInstruction: string) => {
 };
 
 export const generateDestinationImage = async (destination: string, mood: string): Promise<string> => {
-  // We use Unsplash for hero images to avoid heavy base64 strings that exceed Firestore's 1MB limit.
-  // We construct a query-based URL that Unsplash can resolve to a beautiful travel image.
-  const query = encodeURIComponent(`${destination} ${mood} landmark travel`);
-  return `https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&w=1600&q=80&sig=${query}`; 
-  // Note: While this still uses a fallback ID, in a production app one would use the Unsplash Search API.
-  // The key is avoiding the 2.5MB base64 data which was crashing the Firestore writes.
+  try {
+    const response = await fetchWithRetry(() => getAI().models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [{ text: `Cinematic travel photo of a famous landmark in ${destination}, ${mood} atmosphere, 16:9, high resolution.` }]
+      },
+      config: {
+        imageConfig: { aspectRatio: "16:9" }
+      }
+    }));
+
+    if (response.candidates && response.candidates[0].content.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          const base64EncodeString = part.inlineData.data;
+          return `data:image/jpeg;base64,${base64EncodeString}`;
+        }
+      }
+    }
+    
+    // Fallback if no image part found
+    return `https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&w=1600&q=80&sig=${encodeURIComponent(destination)}`;
+  } catch (error) {
+    console.error("AI Image Generation failed:", error);
+    return `https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&w=1600&q=80&sig=${encodeURIComponent(destination)}`;
+  }
+};
+
+export const generateDestinationDetails = async (destination: string): Promise<any> => {
+  const prompt = `Provide detailed travel info for ${destination}. 
+  Include: 
+  - 1 paragraph overview.
+  - 3 best value hotels (name, short desc, approx price).
+  - 4 must-see things to do (name, short desc, rating).
+  - 3 best local eateries (name, short desc, price level, rating).
+  Respond in JSON only.`;
+
+  const result = await fetchWithRetry(() => getAI().models.generateContent({
+    model: "gemini-3.1-flash-lite-preview",
+    contents: prompt,
+    config: {
+      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          name: { type: Type.STRING },
+          description: { type: Type.STRING },
+          hotels: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                description: { type: Type.STRING },
+                price: { type: Type.STRING },
+                rating: { type: Type.STRING }
+              },
+              required: ["name", "description", "price", "rating"]
+            }
+          },
+          thingsToDo: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                description: { type: Type.STRING },
+                rating: { type: Type.STRING }
+              },
+              required: ["name", "description", "rating"]
+            }
+          },
+          restaurants: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                description: { type: Type.STRING },
+                price: { type: Type.STRING },
+                rating: { type: Type.STRING }
+              },
+              required: ["name", "description", "price", "rating"]
+            }
+          }
+        },
+        required: ["name", "description", "hotels", "thingsToDo", "restaurants"]
+      }
+    }
+  }));
+
+  const data = JSON.parse(result.text || '{}');
+  return data;
 };

@@ -5,12 +5,12 @@ import { TravelMood } from '../../types';
 import { shuffleDestinations } from '../../constants/destinations';
 
 interface HomeViewProps {
-  onPlanTrip: (destination: string) => void;
+  onViewDetails: (destination: string) => void;
   onSetMood: (mood: TravelMood) => void;
   onExplore: () => void;
 }
 
-const HomeView: React.FC<HomeViewProps> = ({ onPlanTrip, onSetMood, onExplore }) => {
+const HomeView: React.FC<HomeViewProps> = ({ onViewDetails, onSetMood, onExplore }) => {
   const shuffledDestinations = useMemo(() => shuffleDestinations(12), []);
 
   const moodCards = [
@@ -83,7 +83,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onPlanTrip, onSetMood, onExplore })
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => onPlanTrip(dest.name)}
+              onClick={() => onViewDetails(dest.name)}
               className="group cursor-pointer space-y-3"
             >
               <div className="relative aspect-[3/4] rounded-[24px] overflow-hidden shadow-md">

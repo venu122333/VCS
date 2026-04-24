@@ -6,6 +6,7 @@ import { User as UserIcon, LogOut, Menu, X, Wand2, Settings, Home, Compass, Mess
 
 interface HeaderProps {
   user: User | null;
+  userProfile?: { photoURL?: string } | null;
   onLogout: () => void;
   onOpenProfile: () => void;
   onOpenSettings: () => void;
@@ -13,7 +14,7 @@ interface HeaderProps {
   onNavigate: (view: any) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, onLogout, onOpenProfile, onOpenSettings, currentView, onNavigate }) => {
+const Header: React.FC<HeaderProps> = ({ user, userProfile, onLogout, onOpenProfile, onOpenSettings, currentView, onNavigate }) => {
   const navItems = [
     { id: 'HOME', icon: Home, label: 'Home' },
     { id: 'EXPLORE', icon: Compass, label: 'Explore' },
@@ -21,6 +22,9 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onOpenProfile, onOpenSe
     { id: 'CHAT', icon: MessageSquare, label: 'Coach' },
     { id: 'PROFILE', icon: UserIcon, label: 'Profile' }
   ];
+
+  const isCustomAvatar = userProfile?.photoURL?.startsWith('data:');
+  const profilePic = (isCustomAvatar ? userProfile?.photoURL : user?.photoURL) || userProfile?.photoURL;
 
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
@@ -63,8 +67,8 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onOpenProfile, onOpenSe
                 onClick={onOpenProfile}
                 className="flex items-center gap-3 md:bg-slate-50 md:hover:bg-slate-100 md:px-4 md:py-2 rounded-2xl transition-all md:border md:border-slate-100"
               >
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName || ''} className="w-9 h-9 md:w-8 md:h-8 rounded-xl object-cover shadow-sm" />
+                {profilePic ? (
+                  <img src={profilePic} alt={user.displayName || ''} className="w-9 h-9 md:w-8 md:h-8 rounded-xl object-cover shadow-sm" />
                 ) : (
                   <div className="w-9 h-9 md:w-8 md:h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
                     {user.displayName?.[0]}

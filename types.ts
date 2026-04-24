@@ -67,6 +67,15 @@ export interface TravelPlan {
   heroImage?: string;
 }
 
+export interface DestinationDetails {
+  name: string;
+  description: string;
+  image: string;
+  hotels: { name: string; description: string; price: string; rating: string }[];
+  thingsToDo: { name: string; description: string; rating: string }[];
+  restaurants: { name: string; description: string; price: string; rating: string }[];
+}
+
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
