@@ -186,7 +186,7 @@ const App: React.FC = () => {
     setError('');
     setSaveCount(0);
     setIsViewingSavedPlan(false);
-    setHeroImage(`https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80`);
+    setHeroImage(`https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80`);
     
     try {
       const planPromise = generateTravelPlan(
@@ -221,13 +221,7 @@ const App: React.FC = () => {
       });
 
     } catch (err: any) {
-      console.error("Pathfind Error:", err);
-      // Check for quota/rate limit error
-      if (err?.status === 429 || (err?.message && err.message.toLowerCase().includes('quota'))) {
-        setError('AI Capacity Reached. We are currently experiencing high demand. Please try again in 1 minute or check your API key settings.');
-      } else {
-        setError('Failed to generate plan. Please try again.');
-      }
+      setError('Failed to generate plan. Please try again.');
     } finally {
       setIsGenerating(false);
     }

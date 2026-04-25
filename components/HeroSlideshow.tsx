@@ -4,24 +4,24 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const images = [
   {
+    url: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1920&q=80',
+    alt: 'Mountain Lake Adventure'
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80',
+    alt: 'Yosemite National Park'
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1920&q=80',
+    alt: 'Santorini Sunset'
+  },
+  {
     url: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1920&q=80',
     alt: 'Cinque Terre, Italy'
   },
   {
     url: 'https://images.unsplash.com/photo-1493246507139-91e8bef99c02?auto=format&fit=crop&w=1920&q=80',
     alt: 'Banff National Park'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1449034446853-66c86144b0ad?auto=format&fit=crop&w=1920&q=80',
-    alt: 'San Francisco'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&w=1920&q=80',
-    alt: 'Slovenia Hiking'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
-    alt: 'Classic London'
   }
 ];
 
