@@ -30,11 +30,15 @@ const getAI = () => {
   return aiInstance;
 };
 
-const fetchWithRetry = async (fn: () => Promise<any>, retries = 3, delay = 1000): Promise<any> => {
+const fetchWithRetry = async (fn: () => Promise<any>, retries = 3, delay = 1500): Promise<any> => {
   try {
     return await fn();
   } catch (error: any) {
-    if (retries > 0 && (error.status === 429 || error.status === 500 || error.status === 503)) {
+    const status = error.status || error.error?.code || error.code;
+    const isRetryable = retries > 0 && (status === 429 || status === 500 || status === 503 || status === 504);
+    
+    if (isRetryable) {
+      // Use exponential backoff: 1.5s, 3s, 6s...
       await new Promise(resolve => setTimeout(resolve, delay));
       return fetchWithRetry(fn, retries - 1, delay * 2);
     }
@@ -211,9 +215,15 @@ export const generateDestinationImage = async (destination: string, mood: string
     
     // Fallback if no image part found
     return `https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&w=1600&q=80&sig=${encodeURIComponent(destination)}`;
-  } catch (error) {
-    console.error("AI Image Generation failed:", error);
-    return `https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&w=1600&q=80&sig=${encodeURIComponent(destination)}`;
+  } catch (error: any) {
+    // If it's a quota error, we silently fall back to keep the UI clean as requested
+    const isQuota = error?.status === 429 || (error?.message && error.message.includes('quota'));
+    if (!isQuota) {
+      console.error("AI Image Generation failed:", error);
+    }
+    
+    // Return a reliable fallback image
+    return `https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1600&q=80&sig=${encodeURIComponent(destination)}`;
   }
 };
 

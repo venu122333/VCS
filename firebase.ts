@@ -1,5 +1,16 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signInWithRedirect, 
+  getRedirectResult, 
+  signOut, 
+  onAuthStateChanged, 
+  User, 
+  setPersistence, 
+  browserLocalPersistence 
+} from 'firebase/auth';
 import { 
   getFirestore, 
   initializeFirestore,
@@ -23,6 +34,11 @@ import firebaseConfig from './firebase-applet-config.json';
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
+// Explicitly set persistence to local to ensure sessions survive refreshes and handle some network issues
+setPersistence(auth, browserLocalPersistence).catch(err => {
+  console.error("Failed to set auth persistence:", err);
+});
+
 // Use specialized initialization for Firestore to handle mobile/APK network stability
 // experimentalForceLongPolling: true ensures we don't hit WebSocket/WebChannel stream errors (Listen stream errors)
 // localCache: persistentLocalCache provides offline support for a better user experience
@@ -33,6 +49,25 @@ export const db = initializeFirestore(app, {
 
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+// Helper to format Firebase Auth errors
+export const formatAuthError = (error: any): string => {
+  switch (error.code) {
+    case 'auth/network-request-failed':
+      return "Network request failed. Please check your internet connection or disable any ad-blockers/VPNs that might be blocking Google authentication.";
+    case 'auth/unauthorized-domain':
+      return `This domain ("${window.location.hostname}") is not authorized for Google Sign-in. Please add it to "Authorized Domains" in the Firebase Console.`;
+    case 'auth/popup-blocked':
+      return "The login popup was blocked. Please enable popups or try 'Open in new tab'.";
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+      return ""; // Silent fail
+    case 'auth/internal-error':
+      return "An internal Firebase error occurred. Please try again later.";
+    default:
+      return error.message || "An unexpected authentication error occurred.";
+  }
+};
 
 // Auth functions
 export const signInWithGoogle = async () => {
@@ -67,6 +102,8 @@ export const signInWithGoogle = async () => {
       return null;
     }
     console.error("Sign-in error:", error);
+    // Attach user-friendly message
+    error.friendlyMessage = formatAuthError(error);
     throw error;
   }
 };

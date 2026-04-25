@@ -13,7 +13,7 @@ import DivineView from './components/views/DivineView';
 import DestinationDetailView from './components/views/DestinationDetailView';
 import { TravelPlan, TravelMood, TravelerType } from './types';
 import { generateTravelPlan, generateDestinationImage } from './services/geminiService';
-import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, getRedirectResult } from './firebase';
+import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, getRedirectResult, formatAuthError } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
@@ -72,7 +72,10 @@ const App: React.FC = () => {
       } catch (err: any) {
         if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
           console.error("Redirect login error:", err);
-          setError('Login failed. Please try again.');
+          const friendlyMsg = formatAuthError(err);
+          if (friendlyMsg) {
+            setError(friendlyMsg);
+          }
         }
       } finally {
         setIsAuthReady(true);
@@ -183,7 +186,7 @@ const App: React.FC = () => {
     setError('');
     setSaveCount(0);
     setIsViewingSavedPlan(false);
-    setHeroImage(`https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80`);
+    setHeroImage(`https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80`);
     
     try {
       const planPromise = generateTravelPlan(
@@ -218,7 +221,13 @@ const App: React.FC = () => {
       });
 
     } catch (err: any) {
-      setError('Failed to generate plan. Please try again.');
+      console.error("Pathfind Error:", err);
+      // Check for quota/rate limit error
+      if (err?.status === 429 || (err?.message && err.message.toLowerCase().includes('quota'))) {
+        setError('AI Capacity Reached. We are currently experiencing high demand. Please try again in 1 minute or check your API key settings.');
+      } else {
+        setError('Failed to generate plan. Please try again.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -236,15 +245,9 @@ const App: React.FC = () => {
       }
     } catch (err: any) {
       console.error("Login Error:", err);
-      if (err.code === 'auth/unauthorized-domain') {
-        setError(`Domain not authorized. Add "${window.location.hostname}" to authorized domains in Firebase Console.`);
-      } else if (err.code === 'auth/popup-blocked') {
-        setError('Login window was blocked. Enable popups or use "Open in new tab".');
-      } else if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-        // Just in case it still throws instead of returning null
-        setError('');
-      } else {
-        setError(err.message || 'Login failed. Please try again.');
+      const friendlyMsg = err.friendlyMessage || formatAuthError(err);
+      if (friendlyMsg) {
+        setError(friendlyMsg);
       }
     } finally {
       setIsLoggingIn(false);

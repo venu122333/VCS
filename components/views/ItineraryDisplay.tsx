@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TravelPlan } from '../types';
+import { TravelPlan } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 

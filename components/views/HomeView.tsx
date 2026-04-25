@@ -14,9 +14,9 @@ const HomeView: React.FC<HomeViewProps> = ({ onViewDetails, onSetMood, onExplore
   const shuffledDestinations = useMemo(() => shuffleDestinations(12), []);
 
   const moodCards = [
-    { mood: TravelMood.ADVENTUROUS, label: 'Excited', sub: 'Adventure Awaits', icon: Zap, color: 'bg-blue-600', iconColor: 'text-blue-100', image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&h=500&q=80' },
-    { mood: TravelMood.CULTURAL, label: 'Divine', sub: 'Temples & Sacred Sites', icon: () => <span className="text-lg leading-none">🙏</span>, color: 'bg-rose-500', iconColor: 'text-rose-100', image: 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?auto=format&fit=crop&w=400&h=500&q=80' },
-    { mood: TravelMood.RELAXED, label: 'Relaxed', sub: 'Weekend Relaxation', icon: Coffee, color: 'bg-orange-500', iconColor: 'text-orange-100', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.ADVENTUROUS, label: 'Excited', sub: 'Adventure Awaits', icon: Zap, color: 'bg-blue-600', iconColor: 'text-blue-100', image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.CULTURAL, label: 'Divine', sub: 'Temples & Sacred Sites', icon: () => <span className="text-lg leading-none">🙏</span>, color: 'bg-rose-500', iconColor: 'text-rose-100', image: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.RELAXED, label: 'Relaxed', sub: 'Weekend Relaxation', icon: Coffee, color: 'bg-orange-500', iconColor: 'text-orange-100', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&h=500&q=80' },
     { mood: TravelMood.FOODIE, label: 'Hungry', sub: 'Local Gastronomy', icon: Coffee, color: 'bg-emerald-500', iconColor: 'text-emerald-100', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&h=500&q=80' },
     { mood: TravelMood.ROMANTIC, label: 'Loving', sub: 'Romantic Escape', icon: Heart, color: 'bg-pink-500', iconColor: 'text-pink-100', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=400&h=500&q=80' },
   ];
@@ -112,7 +112,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onViewDetails, onSetMood, onExplore
       >
         <div className="absolute inset-0 bg-slate-900">
           <img 
-            src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80" 
+            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80" 
             alt="Mountains" 
             className="w-full h-full object-cover opacity-60 brightness-75 transition-transform duration-[10s] ease-linear group-hover:scale-125"
             referrerPolicy="no-referrer"

@@ -21,7 +21,7 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({ destinati
     const fetchDetails = async () => {
       setIsLoading(true);
       // Set a generic unsplash image initially to load fast
-      setImage(`https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`);
+      setImage(`https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80`);
       
       try {
         const timeoutPromise = new Promise<any>((_, reject) => 
@@ -43,14 +43,18 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({ destinati
         if (active && img) {
           setImage(img);
         }
-      } catch (error) {
-        console.error("Error fetching destination details:", error);
+      } catch (error: any) {
+        const isQuota = error?.status === 429 || (error?.message && error.message.toLowerCase().includes('quota'));
+        if (!isQuota) {
+          console.error("Error fetching destination details:", error);
+        }
+        
         if (active) {
           // Provide basic fallback details upon error so the user isn't stuck
           setDetails({
             name: destinationName,
             description: `We're currently gathering more real-time info about ${destinationName}. Meanwhile, check out general resources to plan your amazing trip to this destination!`,
-            image: `https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`,
+            image: `https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80`,
             hotels: [{ name: "Local Boutique Hotel", description: "A highly rated stay near the center.", price: "$120/night", rating: "4.8" }],
             thingsToDo: [{ name: "City Exploration", description: "Wander through the central areas to discover local culture.", rating: "4.5" }],
             restaurants: [{ name: "Traditional Eatery", description: "Experience authentic local flavors.", price: "$$", rating: "4.7" }]
