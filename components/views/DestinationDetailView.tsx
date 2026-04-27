@@ -31,7 +31,7 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({
       
       try {
         const timeoutPromise = new Promise<any>((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 8000)
+          setTimeout(() => reject(new Error('Timeout')), 15000)
         );
         
         const data = await Promise.race([
@@ -55,11 +55,24 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({
           // Provide basic fallback details upon error so the user isn't stuck
           setDetails({
             name: destinationName,
-            description: initialDescription || `${destinationName} is a remarkable destination known for its unique culture, scenic beauty, and vibrant local atmosphere. It offers a blend of historical significance and modern charm that attracts travelers from across the globe.`,
+            description: initialDescription || `${destinationName} is a world-class destination celebrated for its incredible history, stunning architecture, and vibrant local energy. From peaceful natural landscapes to buzzing urban centers, it offers a wealth of experiences for every type of traveler. Explore the local culture, indulge in authentic flavors, and create unforgettable memories in this magical place.`,
             image: initialImage || `https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`,
-            hotels: [{ name: "Recommended Stay", description: "A top-rated choice for convenience and comfort in the heart of the city.", price: "$120/night", rating: "4.8" }],
-            thingsToDo: [{ name: "Local Exploration", description: "Discover hidden gems and famous landmarks that define this city's character.", rating: "4.5" }],
-            restaurants: [{ name: "Authentic Eatery", description: "A must-visit spot to experience the true flavor of local cuisine.", price: "$$", rating: "4.7" }]
+            hotels: [
+              { name: "Centrally Located Haven", description: "A top-rated boutique hotel known for its exceptional service and proximity to major landmarks.", price: "$150/night", rating: "4.9" },
+              { name: "Riverside Retreat", description: "Enjoy stunning views and modern amenities in a tranquil setting just outside the city buzz.", price: "$120/night", rating: "4.7" },
+              { name: "The Classic Grand", description: "A historic stay offering timeless elegance and luxury right in the heart of the tourist district.", price: "$280/night", rating: "4.8" }
+            ],
+            thingsToDo: [
+              { name: "Historic City Center Tour", description: "Wander through centuries-old streets and discover the stories behind iconic architecture.", rating: "4.9" },
+              { name: "Sunset Hill Observation", description: "Capture the most breathtaking panoramic views of the entire destination from this famous peak.", rating: "4.8" },
+              { name: "Local Arts & Culture Museum", description: "Immerse yourself in the local heritage with fascinating exhibits and interactive displays.", rating: "4.7" },
+              { name: "Hidden Garden Exploration", description: "Discover secret green spaces and quiet courtyards tucked away from the main tourist paths.", rating: "4.6" }
+            ],
+            restaurants: [
+              { name: "The Heritage Kitchen", description: "Savor award-winning local dishes prepared with traditional recipes and seasonal ingredients.", price: "$$$", rating: "4.9" },
+              { name: "Street Flavor Alley", description: "The best place to experience the vibrant pulse of local street food culture in an authentic setting.", price: "$", rating: "4.7" },
+              { name: "Skyline Bistro", description: "Modern fusion cuisine with a view—perfect for a memorable dinner overlooking the city lights.", price: "$$", rating: "4.8" }
+            ]
           });
           setIsLoading(false);
         }

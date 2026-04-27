@@ -218,13 +218,13 @@ export const generateDestinationImage = async (destination: string, mood: string
 };
 
 export const generateDestinationDetails = async (destination: string): Promise<any> => {
-  const prompt = `Provide detailed travel info for ${destination}. 
+  const prompt = `Provide rich, detailed travel info for ${destination}. 
   Include: 
-  - 1 paragraph overview.
-  - 3 best value hotels (name, short desc, approx price).
-  - 4 must-see things to do (name, short desc, rating).
-  - 3 best local eateries (name, short desc, price level, rating).
-  Respond in JSON only.`;
+  - 1 descriptive paragraph overview.
+  - EXACTLY 3 diverse best value hotels (name, short desc, approx price, rating).
+  - EXACTLY 4 famous must-see things to do (name, short desc, rating).
+  - EXACTLY 3 top-rated local eateries (name, short desc, price level, rating).
+  Respond in JSON only following the schema strictly. Do not abbreviate.`;
 
   const result = await fetchWithRetry(() => getAI().models.generateContent({
     model: "gemini-3.1-flash-lite-preview",
