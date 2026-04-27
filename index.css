@@ -14,6 +14,14 @@ h1, h2, .font-serif {
   @apply font-serif font-bold; 
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .glass { 
   @apply bg-white/70 backdrop-blur-md; 
 }

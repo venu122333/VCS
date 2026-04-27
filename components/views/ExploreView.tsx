@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, MapPin, Grid, List, TrendingUp, Filter } from 'lucide-react';
-import { POPULAR_DESTINATIONS } from '../../constants/destinations';
+import { POPULAR_DESTINATIONS, Destination } from '../../constants/destinations';
 
 interface ExploreViewProps {
-  onViewDetails: (destination: string) => void;
+  onViewDetails: (destination: Destination) => void;
 }
 
 const ExploreView: React.FC<ExploreViewProps> = ({ onViewDetails }) => {
@@ -96,7 +96,7 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onViewDetails }) => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => onViewDetails(dest.name)}
+                onClick={() => onViewDetails(dest)}
                 className="group cursor-pointer bg-white rounded-[32px] overflow-hidden border border-slate-50 shadow-sm hover:shadow-xl transition-all p-2"
               >
                 <div className="relative aspect-video rounded-[24px] overflow-hidden">

@@ -6,13 +6,21 @@ import { generateDestinationDetails, generateDestinationImage } from '../../serv
 
 interface DestinationDetailViewProps {
   destinationName: string;
+  initialDescription?: string;
+  initialImage?: string;
   onBack: () => void;
   onPlanTrip: () => void;
 }
 
-const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({ destinationName, onBack, onPlanTrip }) => {
+const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({ 
+  destinationName, 
+  initialDescription, 
+  initialImage,
+  onBack, 
+  onPlanTrip 
+}) => {
   const [details, setDetails] = useState<DestinationDetails | null>(null);
-  const [image, setImage] = useState('');
+  const [image, setImage] = useState(initialImage || `https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'hotels' | 'things' | 'restaurants'>('overview');
 
@@ -20,8 +28,6 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({ destinati
     let active = true;
     const fetchDetails = async () => {
       setIsLoading(true);
-      // Set a generic unsplash image initially to load fast
-      setImage(`https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`);
       
       try {
         const timeoutPromise = new Promise<any>((_, reject) => 
@@ -49,11 +55,11 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({ destinati
           // Provide basic fallback details upon error so the user isn't stuck
           setDetails({
             name: destinationName,
-            description: `We're currently gathering more real-time info about ${destinationName}. Meanwhile, check out general resources to plan your amazing trip to this destination!`,
-            image: `https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`,
-            hotels: [{ name: "Local Boutique Hotel", description: "A highly rated stay near the center.", price: "$120/night", rating: "4.8" }],
-            thingsToDo: [{ name: "City Exploration", description: "Wander through the central areas to discover local culture.", rating: "4.5" }],
-            restaurants: [{ name: "Traditional Eatery", description: "Experience authentic local flavors.", price: "$$", rating: "4.7" }]
+            description: initialDescription || `${destinationName} is a remarkable destination known for its unique culture, scenic beauty, and vibrant local atmosphere. It offers a blend of historical significance and modern charm that attracts travelers from across the globe.`,
+            image: initialImage || `https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`,
+            hotels: [{ name: "Recommended Stay", description: "A top-rated choice for convenience and comfort in the heart of the city.", price: "$120/night", rating: "4.8" }],
+            thingsToDo: [{ name: "Local Exploration", description: "Discover hidden gems and famous landmarks that define this city's character.", rating: "4.5" }],
+            restaurants: [{ name: "Authentic Eatery", description: "A must-visit spot to experience the true flavor of local cuisine.", price: "$$", rating: "4.7" }]
           });
           setIsLoading(false);
         }
@@ -61,7 +67,7 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({ destinati
     };
     fetchDetails();
     return () => { active = false; };
-  }, [destinationName]);
+  }, [destinationName, initialDescription, initialImage]);
 
   if (isLoading) {
     return (
@@ -120,7 +126,7 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({ destinati
 
       {/* Tabs */}
       <div className="px-4 -mt-6 relative z-10">
-        <div className="bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 p-2 flex overflow-x-auto no-scrollbar gap-1 border border-slate-100">
+        <div className="bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 p-2 flex overflow-x-auto flex-nowrap no-scrollbar gap-1 border border-slate-100 touch-pan-x">
           {tabs.map((tab) => (
             <button
               key={tab.id}

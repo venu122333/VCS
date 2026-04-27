@@ -2,10 +2,10 @@ import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, ArrowRight, Compass, Sparkles, Heart, Zap, Coffee } from 'lucide-react';
 import { TravelMood } from '../../types';
-import { shuffleDestinations } from '../../constants/destinations';
+import { shuffleDestinations, Destination } from '../../constants/destinations';
 
 interface HomeViewProps {
-  onViewDetails: (destination: string) => void;
+  onViewDetails: (destination: Destination) => void;
   onSetMood: (mood: TravelMood) => void;
   onExplore: () => void;
 }
@@ -83,7 +83,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onViewDetails, onSetMood, onExplore
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => onViewDetails(dest.name)}
+              onClick={() => onViewDetails(dest)}
               className="group cursor-pointer space-y-3"
             >
               <div className="relative aspect-[3/4] rounded-[24px] overflow-hidden shadow-md">

@@ -12,6 +12,7 @@ import PlannerView from './components/views/PlannerView';
 import DivineView from './components/views/DivineView';
 import DestinationDetailView from './components/views/DestinationDetailView';
 import { TravelPlan, TravelMood, TravelerType } from './types';
+import { Destination } from './constants/destinations';
 import { generateTravelPlan, generateDestinationImage } from './services/geminiService';
 import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, getRedirectResult, formatAuthError } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -24,7 +25,7 @@ type activeView = 'HOME' | 'PLAN' | 'EXPLORE' | 'CHAT' | 'PROFILE' | 'ITINERARY'
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<activeView>('HOME');
-  const [selectedDestinationName, setSelectedDestinationName] = useState<string | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [destination, setDestination] = useState('');
   const [duration, setDuration] = useState<number | ''>(3);
   const [budget, setBudget] = useState<number | ''>('');
@@ -293,7 +294,7 @@ const App: React.FC = () => {
       case 'HOME': return (
         <HomeView 
           onViewDetails={(dest) => { 
-            setSelectedDestinationName(dest); 
+            setSelectedDestination(dest); 
             setCurrentView('DESTINATION_DETAIL'); 
           }} 
           onSetMood={(m) => {
@@ -310,17 +311,19 @@ const App: React.FC = () => {
       case 'EXPLORE': return (
         <ExploreView 
           onViewDetails={(dest) => { 
-            setSelectedDestinationName(dest); 
+            setSelectedDestination(dest); 
             setCurrentView('DESTINATION_DETAIL'); 
           }} 
         />
       );
-      case 'DESTINATION_DETAIL': return selectedDestinationName ? (
+      case 'DESTINATION_DETAIL': return selectedDestination ? (
         <DestinationDetailView 
-          destinationName={selectedDestinationName}
+          destinationName={selectedDestination.name}
+          initialDescription={selectedDestination.description}
+          initialImage={selectedDestination.image}
           onBack={() => setCurrentView('EXPLORE')}
           onPlanTrip={() => {
-            setDestination(selectedDestinationName);
+            setDestination(selectedDestination.name);
             setCurrentView('PLAN');
           }}
         />
@@ -436,7 +439,7 @@ const App: React.FC = () => {
       ) : (
         <HomeView 
           onViewDetails={(dest) => { 
-            setSelectedDestinationName(dest); 
+            setSelectedDestination(dest); 
             setCurrentView('DESTINATION_DETAIL'); 
           }} 
           onSetMood={(m) => {
@@ -453,7 +456,7 @@ const App: React.FC = () => {
       default: return (
         <HomeView 
           onViewDetails={(dest) => { 
-            setSelectedDestinationName(dest); 
+            setSelectedDestination(dest); 
             setCurrentView('DESTINATION_DETAIL'); 
           }} 
           onSetMood={(m) => {

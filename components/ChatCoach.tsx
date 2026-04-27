@@ -85,7 +85,7 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, fullPage }) => {
     setMessages([
       { 
         role: 'model', 
-        text: "Hey fellow traveler! ✈️ I'm your NomadAI Ultra Coach! ⚡ Need some lightning-fast tips or help refining your dream adventure? Let's go! 🚀✨", 
+        text: "HELLO TRAVELER! 🌍✨ I’m NomadAI Ultra Coach, your high-speed guide to the globe! ✈️ Where are we heading first-adventure, beach vibes, or city secrets?Let's go! 🚀✨", 
         timestamp: new Date() 
       }
     ]);
