@@ -85,7 +85,7 @@ export const generateTravelPlan = async (
   - JSON only. NO YAPPING.`;
 
   const result = await fetchWithRetry(() => getAI().models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-1.5-flash",
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -219,23 +219,22 @@ export const generateDestinationImage = async (destination: string, mood: string
 };
 
 export const generateDestinationDetails = async (destination: string): Promise<any> => {
-  const prompt = `You are a legendary travel historian and critic. Provide an EXHAUSTIVE, ENCYCLOPEDIC, and CAPTIVATING travel guide for ${destination}. 
+  const prompt = `You are a world-class travel guide. Provide an EXTENSIVE, IMMERSIVE, and CAPTIVATING travel guide for ${destination}. 
   
-  YOUR RESPONSE MUST BE EXTREMELY DETAILED AND WORDY:
-  1. OVERVIEW: Write a minimum of 600 words for the overview. Break it into 5 distinct, very long and immersive paragraphs. 
-     - Paragraph 1: Ancient origins, etymology, and historical evolution through the ages.
-     - Paragraph 2: Architectural marvels, urban planning, and the physical transformation of the landscape.
-     - Paragraph 3: Deep cultural immersion - traditions, local philosophy, festivals, and the soul of the people.
-     - Paragraph 4: Culinary heritage, climate nuances, and the natural beauty surrounding the area.
-     - Paragraph 5: Contemporary relevance, modern economy, nightlife, and why it is a global bucket-list destination today.
-  2. HOTELS: 3 luxury/boutique choices with 5-sentence evocative descriptions for each.
-  3. THINGS TO DO: 4 must-experience landmark activities with 5-sentence legendary stories/background for each.
-  4. RESTAURANTS: 3 top-tier culinary institutions with 5-sentence descriptions of their heritage and signature dishes.
+  YOUR RESPONSE MUST BE HIGHLY DETAILED:
+  1. OVERVIEW: Write a rich and immersive overview consisting of 4 distinct, long and informative paragraphs. 
+     - Paragraph 1: Ancient origins, etymology, and historical evolution.
+     - Paragraph 2: Architectural marvels and the soul of the people.
+     - Paragraph 3: Deep cultural immersion - traditions, festivals, and local philosophy.
+     - Paragraph 4: Culinary heritage and why it is a global bucket-list destination today.
+  2. HOTELS: 3 luxury/boutique choices with 4-sentence evocative descriptions for each.
+  3. THINGS TO DO: 4 must-experience landmark activities with 4-sentence legendary stories/background for each.
+  4. RESTAURANTS: 3 top-tier culinary institutions with 4-sentence descriptions of their heritage and signature dishes.
   
-  Respond ONLY in JSON format following the schema. Use double newlines (\\n\\n) between paragraphs in the description. Be poetic, professional, and thorough.`;
+  Respond ONLY in JSON format. Use double newlines (\\n\\n) between paragraphs in the description. Be poetic and thorough.`;
 
   const result = await fetchWithRetry(() => getAI().models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-1.5-flash",
     contents: prompt,
     config: {
       responseMimeType: "application/json",
