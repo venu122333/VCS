@@ -52,7 +52,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
             Daily Adventure
           </h2>
           
-          {plan.itinerary.map((day) => (
+          {(plan.itinerary || []).map((day) => (
             <div key={day.day} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex items-center gap-6 border-b-4 border-slate-100 pb-4">
                 <span className="text-6xl font-black text-blue-100 italic select-none">0{day.day}</span>
@@ -60,7 +60,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
               </div>
               
               <div className="space-y-10 pl-4 md:pl-8 border-l-4 border-slate-50 ml-4 md:ml-8">
-                {day.activities.map((act, i) => (
+                {(day.activities || []).map((act, i) => (
                   <div key={i} className="relative group">
                     {/* Activity dot */}
                     <div className="absolute -left-[30px] md:-left-[46px] top-2 w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow-lg group-hover:scale-125 transition-transform"></div>
@@ -101,7 +101,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
               Total Est. Budget
             </h3>
             <div className="text-4xl font-bold mb-4">
-              {plan.estimatedBudget.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}
+              {(plan.estimatedBudget || []).reduce((acc, curr) => acc + (curr.amount || 0), 0).toLocaleString()}
               <span className="text-sm ml-2 opacity-70">{plan.currencyCode}</span>
             </div>
             <p className="text-white/70 text-sm">
@@ -118,7 +118,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
             <div className="h-64 outline-none focus:outline-none">
               <ResponsiveContainer width="100%" height="100%" className="outline-none focus:outline-none">
                 <BarChart 
-                  data={plan.estimatedBudget} 
+                  data={plan.estimatedBudget || []} 
                   layout="vertical"
                   style={{ outline: 'none' }}
                   className="outline-none focus:outline-none"
@@ -137,7 +137,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
                     activeBar={false}
                     stroke="none"
                   >
-                    {plan.estimatedBudget.map((entry, index) => (
+                    {(plan.estimatedBudget || []).map((entry, index) => (
                       <Cell 
                         key={`cell-${index}`} 
                         fill={COLORS[index % COLORS.length]} 
@@ -158,7 +158,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
               Best Hotels in Budget
             </h3>
             <div className="space-y-4">
-              {plan.recommendedHotels.map((hotel, i) => (
+              {(plan.recommendedHotels || []).map((hotel, i) => (
                 <div key={i} className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
                   <div className="flex justify-between items-start">
                     <h4 className="font-bold text-slate-900">{hotel.name}</h4>
@@ -195,7 +195,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
               Essentials
             </h3>
             <ul className="space-y-3">
-              {plan.packingList.map((item, i) => (
+              {(plan.packingList || []).map((item, i) => (
                 <li key={i} className="flex items-center gap-3 text-slate-300 text-sm">
                   <i className="fa-solid fa-check text-blue-400"></i>
                   {item}
@@ -211,7 +211,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
               Expert Tips
             </h3>
             <div className="space-y-4">
-              {plan.tips.map((tip, i) => (
+              {(plan.tips || []).map((tip, i) => (
                 <div key={i} className="text-blue-800 text-sm leading-relaxed border-l-2 border-blue-200 pl-4">
                   {tip}
                 </div>

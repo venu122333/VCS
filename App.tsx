@@ -201,9 +201,18 @@ const App: React.FC = () => {
         budget as number, 
         currencyInfo
       );
+      
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('TIMEOUT_ERROR')), 75000)
+      );
+
       const imagePromise = generateDestinationImage(destination, mood);
 
-      const newPlan = await planPromise;
+      // Race plan against timeout
+      const newPlan = await Promise.race([
+        planPromise,
+        timeoutPromise
+      ]);
 
       if (newPlan.isBudgetValid === false) {
         setError(`Budget too low. Need at least ${newPlan.minimumBudget} ${newPlan.currencyCode}.`);
@@ -218,11 +227,16 @@ const App: React.FC = () => {
       imagePromise.then(imageUrl => {
         setHeroImage(imageUrl);
       }).catch(() => {
-        setHeroImage(`https://picsum.photos/seed/${destination}/1200/600`);
+        setHeroImage(`https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80`);
       });
 
     } catch (err: any) {
-      setError('Failed to generate plan. Please try again.');
+      console.error("Plan Generation Error:", err);
+      if (err.message === 'TIMEOUT_ERROR') {
+        setError('The AI Architect is taking too long due to high traffic. Please try once more.');
+      } else {
+        setError(err.message || 'Failed to generate plan. Please try again.');
+      }
     } finally {
       setIsGenerating(false);
     }

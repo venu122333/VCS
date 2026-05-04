@@ -199,7 +199,7 @@ Whether you are looking to explore ancient ruins, indulge in world-renowned culi
               exit={{ opacity: 0, y: -10 }}
               className="grid grid-cols-1 md:grid-cols-3 gap-6"
             >
-              {details.hotels.map((hotel, idx) => (
+              {(details.hotels || []).map((hotel, idx) => (
                 <div key={idx} className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50 hover:shadow-xl transition-all space-y-4">
                   <div className="flex justify-between items-start">
                     <div className="p-3 bg-blue-50 rounded-2xl">
@@ -230,7 +230,7 @@ Whether you are looking to explore ancient ruins, indulge in world-renowned culi
               exit={{ opacity: 0, y: -10 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
             >
-              {details.thingsToDo.map((thing, idx) => (
+              {(details.thingsToDo || []).map((thing, idx) => (
                 <div key={idx} className="group bg-white rounded-[32px] p-6 shadow-sm border border-slate-50 hover:shadow-xl transition-all space-y-4">
                   <div className="flex justify-between items-start">
                     <div className="p-3 bg-indigo-50 rounded-2xl group-hover:bg-indigo-600 transition-colors">
@@ -258,7 +258,7 @@ Whether you are looking to explore ancient ruins, indulge in world-renowned culi
               exit={{ opacity: 0, y: -10 }}
               className="grid grid-cols-1 md:grid-cols-3 gap-6"
             >
-              {details.restaurants.map((rest, idx) => (
+              {(details.restaurants || []).map((rest, idx) => (
                 <div key={idx} className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50 hover:shadow-xl transition-all space-y-4">
                   <div className="flex justify-between items-start">
                     <div className="p-3 bg-emerald-50 rounded-2xl">

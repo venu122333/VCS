@@ -175,8 +175,16 @@ export const generateTravelPlan = async (
     }
   }));
 
-  const plan: TravelPlan = JSON.parse(result.text || '{}');
-  return plan;
+  try {
+    const plan: TravelPlan = JSON.parse(result.text || '{}');
+    if (!plan.itinerary || plan.itinerary.length === 0) {
+      throw new Error("Invalid plan generated: missing itinerary");
+    }
+    return plan;
+  } catch (e) {
+    console.error("Failed to parse travel plan:", e, "Raw text:", result.text);
+    throw new Error("I had some trouble architecting your perfect plan. Please try again in a moment!");
+  }
 };
 
 export const createTravelChat = (systemInstruction: string) => {
@@ -287,6 +295,14 @@ export const generateDestinationDetails = async (destination: string): Promise<a
     }
   }));
 
-  const data = JSON.parse(result.text || '{}');
-  return data;
+  try {
+    const data = JSON.parse(result.text || '{}');
+    if (!data.name || !data.hotels) {
+      throw new Error("Incomplete destination facts returned");
+    }
+    return data;
+  } catch (e) {
+    console.error("Failed to parse destination details:", e, "Raw text:", result.text);
+    throw new Error("We encountered a small glitch gathering these facts. Please try again!");
+  }
 };
