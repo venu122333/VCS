@@ -31,7 +31,7 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({
       
       try {
         const timeoutPromise = new Promise<any>((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 15000)
+          setTimeout(() => reject(new Error('Timeout')), 45000)
         );
         
         const data = await Promise.race([
@@ -55,7 +55,11 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({
           // Provide basic fallback details upon error so the user isn't stuck
           setDetails({
             name: destinationName,
-            description: initialDescription || `${destinationName} is a world-class destination celebrated for its incredible history, stunning architecture, and vibrant local energy. From peaceful natural landscapes to buzzing urban centers, it offers a wealth of experiences for every type of traveler. Explore the local culture, indulge in authentic flavors, and create unforgettable memories in this magical place.`,
+            description: (initialDescription && initialDescription.length > 100) ? initialDescription : `${destinationName} is a world-class destination celebrated for its incredible history, stunning architecture, and vibrant local energy. 
+
+From peaceful natural landscapes to buzzing urban centers, it offers a wealth of experiences for every type of traveler. This remarkable location has evolved over centuries, blending traditional values with modern innovation to create a truly unique atmosphere that captivates every visitor.
+
+Whether you are looking to explore ancient ruins, indulge in world-renowned culinary delights, or simply soak in the local ambiance, this city promises an unforgettable journey. Every corner tells a story, and every street holds a new discovery waiting for you.`,
             image: initialImage || `https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`,
             hotels: [
               { name: "Centrally Located Haven", description: "A top-rated boutique hotel known for its exceptional service and proximity to major landmarks.", price: "$150/night", rating: "4.9" },
@@ -170,7 +174,9 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({
             >
               <div className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-50 space-y-6">
                 <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">About {destinationName}</h3>
-                <p className="text-lg text-slate-500 leading-relaxed font-medium">{details.description}</p>
+                <p className="text-xl text-slate-600 leading-loose font-medium whitespace-pre-wrap first-letter:text-4xl first-letter:font-black first-letter:text-blue-600 first-letter:mr-1 first-letter:float-left">
+                  {details.description}
+                </p>
                 <div className="flex flex-wrap gap-4 pt-4">
                   <div className="bg-blue-50 px-6 py-4 rounded-3xl border border-blue-100">
                      <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-1">Atmosphere</span>

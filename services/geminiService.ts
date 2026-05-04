@@ -76,17 +76,18 @@ export const generateTravelPlan = async (
   BUDGET LOGIC:
   ${budgetLogic}
   
-  SPEED RULES:
+  CONTENT RULES:
   ${moodInstructions}
-  - 1-sentence descriptions ONLY.
+  - Provide a long, engaging 3-paragraph summary of why this trip is perfect for the user.
+  - Provide 3-sentence detailed descriptions for every single activity.
   - EXACTLY ${activitiesPerDay} activities/day. Do not provide more or less than ${activitiesPerDay} activities per day.
+  - Be specific about locations and names of places.
   - JSON only. NO YAPPING.`;
 
   const result = await fetchWithRetry(() => getAI().models.generateContent({
-    model: "gemini-3.1-flash-lite-preview",
+    model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
-      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
       responseMimeType: "application/json",
       maxOutputTokens: 1536,
       responseSchema: {
@@ -218,19 +219,25 @@ export const generateDestinationImage = async (destination: string, mood: string
 };
 
 export const generateDestinationDetails = async (destination: string): Promise<any> => {
-  const prompt = `Provide rich, detailed travel info for ${destination}. 
-  Include: 
-  - 1 descriptive paragraph overview.
-  - EXACTLY 3 diverse best value hotels (name, short desc, approx price, rating).
-  - EXACTLY 4 famous must-see things to do (name, short desc, rating).
-  - EXACTLY 3 top-rated local eateries (name, short desc, price level, rating).
-  Respond in JSON only following the schema strictly. Do not abbreviate.`;
+  const prompt = `You are a legendary travel historian and critic. Provide an EXHAUSTIVE, ENCYCLOPEDIC, and CAPTIVATING travel guide for ${destination}. 
+  
+  YOUR RESPONSE MUST BE EXTREMELY DETAILED AND WORDY:
+  1. OVERVIEW: Write a minimum of 600 words for the overview. Break it into 5 distinct, very long and immersive paragraphs. 
+     - Paragraph 1: Ancient origins, etymology, and historical evolution through the ages.
+     - Paragraph 2: Architectural marvels, urban planning, and the physical transformation of the landscape.
+     - Paragraph 3: Deep cultural immersion - traditions, local philosophy, festivals, and the soul of the people.
+     - Paragraph 4: Culinary heritage, climate nuances, and the natural beauty surrounding the area.
+     - Paragraph 5: Contemporary relevance, modern economy, nightlife, and why it is a global bucket-list destination today.
+  2. HOTELS: 3 luxury/boutique choices with 5-sentence evocative descriptions for each.
+  3. THINGS TO DO: 4 must-experience landmark activities with 5-sentence legendary stories/background for each.
+  4. RESTAURANTS: 3 top-tier culinary institutions with 5-sentence descriptions of their heritage and signature dishes.
+  
+  Respond ONLY in JSON format following the schema. Use double newlines (\\n\\n) between paragraphs in the description. Be poetic, professional, and thorough.`;
 
   const result = await fetchWithRetry(() => getAI().models.generateContent({
-    model: "gemini-3.1-flash-lite-preview",
+    model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
-      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,

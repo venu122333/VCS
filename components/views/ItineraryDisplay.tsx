@@ -38,7 +38,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
             </span>
           </div>
           <h1 className="text-3xl md:text-6xl font-bold text-white mb-3 leading-tight drop-shadow-md">{plan.destination}</h1>
-          <p className="text-white/90 max-w-2xl text-sm md:text-lg leading-relaxed line-clamp-6 md:line-clamp-none drop-shadow-sm">{plan.summary}</p>
+          <p className="text-white/90 max-w-3xl text-base md:text-xl leading-relaxed whitespace-pre-wrap drop-shadow-sm font-medium">{plan.summary}</p>
         </div>
       </div>
 

@@ -30,7 +30,7 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onViewDetails }) => {
             name: searchQuery,
             country: 'Search Result',
             image: `https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80`, // Generic beautiful travel
-            description: `We'll use our AI to architect the perfect trip for ${searchQuery}.`,
+            description: `Click to architect your perfect trip with our AI. We'll generate a rich guide including history, culture, hotels, and local secrets for this unique destination.`,
             famousFor: 'Your unique exploration',
             category: 'Popular' as any
           }
