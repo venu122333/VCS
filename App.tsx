@@ -231,11 +231,21 @@ const App: React.FC = () => {
       });
 
     } catch (err: any) {
-      console.error("Plan Generation Error:", err);
+      console.error("Plan Generation Error Details:", {
+        message: err.message,
+        stack: err.stack,
+        error: err
+      });
+      
       if (err.message === 'TIMEOUT_ERROR') {
-        setError('The AI Architect is taking too long due to high traffic. Please try once more.');
+        setError('The AI Architect is taking too long due to high traffic. Please try once more with a shorter duration (e.g. 3-5 days).');
+      } else if (err.message?.includes('Gemini API Key')) {
+        setError('Missing AI Credentials. Please set GEMINI_API_KEY in your settings or environment.');
+        setShowSettings(true);
+      } else if (err.message?.includes('invalid response')) {
+        setError('The AI returned a malformed plan. This can happen with very complex requests. Try reducing the number of days or travelers.');
       } else {
-        setError(err.message || 'Failed to generate plan. Please try again.');
+        setError(err.message || 'We encountered an error while architecting your plan. Please check your network and try again.');
       }
     } finally {
       setIsGenerating(false);
