@@ -15,30 +15,34 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
       {/* Hero Section for Trip */}
-      <div className="relative h-[450px] md:h-[600px] rounded-3xl overflow-hidden shadow-2xl bg-slate-200">
+      <div className="relative h-[500px] md:h-[650px] rounded-[40px] overflow-hidden shadow-2xl bg-slate-200">
         <AnimatePresence mode="wait">
           <motion.img 
             key={heroImage}
             src={heroImage || null} 
             alt={plan.destination} 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             className="w-full h-full object-cover" 
             referrerPolicy="no-referrer"
           />
         </AnimatePresence>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent flex flex-col justify-end p-6 md:p-12">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="bg-blue-600 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">{plan.mood}</span>
-            <span className="bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg border border-white/10">{plan.duration} Days</span>
-            <span className="bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg border border-white/10">
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex flex-col justify-end p-8 md:p-16">
+          <div className="flex flex-wrap gap-3 mb-6">
+            <span className="bg-blue-600/90 backdrop-blur-md text-white text-[10px] md:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">{plan.mood}</span>
+            <span className="bg-white/10 backdrop-blur-md text-white text-[10px] md:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20">{plan.duration} Days</span>
+            <span className="bg-white/10 backdrop-blur-md text-white text-[10px] md:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20">
               {plan.travelerCount} {plan.travelerType}{plan.travelerCount > 1 ? 's' : ''}
             </span>
           </div>
-          <h1 className="text-3xl md:text-6xl font-bold text-white mb-3 leading-tight drop-shadow-md">{plan.destination}</h1>
-          <p className="text-white/90 max-w-3xl text-base md:text-xl leading-relaxed whitespace-pre-wrap drop-shadow-sm font-medium">{plan.summary}</p>
+          <h1 className="text-4xl md:text-8xl font-black text-white mb-6 leading-[0.85] tracking-tighter drop-shadow-2xl uppercase italic">{plan.destination}</h1>
+          <div className="space-y-4">
+             <p className="text-slate-200 max-w-4xl text-lg md:text-xl leading-relaxed whitespace-pre-wrap font-medium drop-shadow-lg border-l-4 border-blue-500 pl-8">
+               {plan.summary}
+             </p>
+          </div>
         </div>
       </div>
 

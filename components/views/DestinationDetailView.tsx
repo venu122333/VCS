@@ -22,69 +22,67 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({
   const [details, setDetails] = useState<DestinationDetails | null>(null);
   const [image, setImage] = useState(initialImage || `https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'hotels' | 'things' | 'restaurants'>('overview');
 
-  useEffect(() => {
-    let active = true;
-    const fetchDetails = async () => {
-      setIsLoading(true);
+  const fetchDetails = async () => {
+    setIsLoading(true);
+    setHasError(false);
+    
+    try {
+      const timeoutPromise = new Promise<any>((_, reject) => 
+        setTimeout(() => reject(new Error('TIMEOUT_ERROR')), 90000)
+      );
       
-      try {
-        const timeoutPromise = new Promise<any>((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 60000)
-        );
-        
-        const data = await Promise.race([
-          generateDestinationDetails(destinationName),
-          timeoutPromise
-        ]);
-        
-        if (active) {
-          setDetails(data);
-          setIsLoading(false);
-        }
-        
-        // Fetch AI image asynchronously in background
-        const img = await generateDestinationImage(destinationName, 'beautiful travel');
-        if (active && img) {
-          setImage(img);
-        }
-      } catch (error) {
-        console.error("Error fetching destination details:", error);
-        if (active) {
-          // Provide basic fallback details upon error so the user isn't stuck
-          setDetails({
-            name: destinationName,
-            description: (initialDescription && initialDescription.length > 100) ? initialDescription : `${destinationName} is a world-class destination celebrated for its incredible history, stunning architecture, and vibrant local energy. 
+      const data = await Promise.race([
+        generateDestinationDetails(destinationName),
+        timeoutPromise
+      ]);
+      
+      setDetails(data);
+      setIsLoading(false);
+      
+      // Fetch AI image asynchronously in background
+      const img = await generateDestinationImage(destinationName, 'beautiful travel');
+      if (img) {
+        setImage(img);
+      }
+    } catch (error: any) {
+      console.error("Error fetching destination details:", error);
+      setHasError(true);
+      // Provide basic fallback details upon error so the user isn't stuck
+      setDetails({
+        name: destinationName,
+        description: (initialDescription && initialDescription.length > 100) ? initialDescription : `${destinationName} is a world-class destination celebrated for its incredible history, stunning architecture, and vibrant local energy. 
 
 From peaceful natural landscapes to buzzing urban centers, it offers a wealth of experiences for every type of traveler. This remarkable location has evolved over centuries, blending traditional values with modern innovation to create a truly unique atmosphere that captivates every visitor.
 
 Whether you are looking to explore ancient ruins, indulge in world-renowned culinary delights, or simply soak in the local ambiance, this city promises an unforgettable journey. Every corner tells a story, and every street holds a new discovery waiting for you.`,
-            image: initialImage || `https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`,
-            hotels: [
-              { name: "Centrally Located Haven", description: "A top-rated boutique hotel known for its exceptional service and proximity to major landmarks.", price: "$150/night", rating: "4.9" },
-              { name: "Riverside Retreat", description: "Enjoy stunning views and modern amenities in a tranquil setting just outside the city buzz.", price: "$120/night", rating: "4.7" },
-              { name: "The Classic Grand", description: "A historic stay offering timeless elegance and luxury right in the heart of the tourist district.", price: "$280/night", rating: "4.8" }
-            ],
-            thingsToDo: [
-              { name: "Historic City Center Tour", description: "Wander through centuries-old streets and discover the stories behind iconic architecture.", rating: "4.9" },
-              { name: "Sunset Hill Observation", description: "Capture the most breathtaking panoramic views of the entire destination from this famous peak.", rating: "4.8" },
-              { name: "Local Arts & Culture Museum", description: "Immerse yourself in the local heritage with fascinating exhibits and interactive displays.", rating: "4.7" },
-              { name: "Hidden Garden Exploration", description: "Discover secret green spaces and quiet courtyards tucked away from the main tourist paths.", rating: "4.6" }
-            ],
-            restaurants: [
-              { name: "The Heritage Kitchen", description: "Savor award-winning local dishes prepared with traditional recipes and seasonal ingredients.", price: "$$$", rating: "4.9" },
-              { name: "Street Flavor Alley", description: "The best place to experience the vibrant pulse of local street food culture in an authentic setting.", price: "$", rating: "4.7" },
-              { name: "Skyline Bistro", description: "Modern fusion cuisine with a view—perfect for a memorable dinner overlooking the city lights.", price: "$$", rating: "4.8" }
-            ]
-          });
-          setIsLoading(false);
-        }
-      }
-    };
+        image: initialImage || `https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80`,
+        hotels: [
+          { name: "Centrally Located Haven", description: "A top-rated boutique hotel known for its exceptional service and proximity to major landmarks.", price: "$150/night", rating: "4.9" },
+          { name: "Riverside Retreat", description: "Enjoy stunning views and modern amenities in a tranquil setting just outside the city buzz.", price: "$120/night", rating: "4.7" },
+          { name: "The Classic Grand", description: "A historic stay offering timeless elegance and luxury right in the heart of the tourist district.", price: "$280/night", rating: "4.8" }
+        ],
+        thingsToDo: [
+          { name: "Historic City Center Tour", description: "Wander through centuries-old streets and discover the stories behind iconic architecture.", rating: "4.9" },
+          { name: "Sunset Hill Observation", description: "Capture the most breathtaking panoramic views of the entire destination from this famous peak.", rating: "4.8" },
+          { name: "Local Arts & Culture Museum", description: "Immerse yourself in the local heritage with fascinating exhibits and interactive displays.", rating: "4.7" },
+          { name: "Hidden Garden Exploration", description: "Discover secret green spaces and quiet courtyards tucked away from the main tourist paths.", rating: "4.6" }
+        ],
+        restaurants: [
+          { name: "The Heritage Kitchen", description: "Savor award-winning local dishes prepared with traditional recipes and seasonal ingredients.", price: "$$$", rating: "4.9" },
+          { name: "Street Flavor Alley", description: "The best place to experience the vibrant pulse of local street food culture in an authentic setting.", price: "$", rating: "4.7" },
+          { name: "Skyline Bistro", description: "Modern fusion cuisine with a view—perfect for a memorable dinner overlooking the city lights.", price: "$$", rating: "4.8" }
+        ]
+      });
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchDetails();
-    return () => { active = false; };
-  }, [destinationName, initialDescription, initialImage]);
+  }, [destinationName]);
 
   if (isLoading) {
     return (
@@ -107,14 +105,14 @@ Whether you are looking to explore ancient ruins, indulge in world-renowned culi
   return (
     <div className="max-w-7xl mx-auto pb-24 md:pb-12 animate-in fade-in duration-500">
       {/* Hero Header */}
-      <div className="relative h-[40vh] md:h-[50vh] w-full overflow-hidden">
+      <div className="relative h-[45vh] md:h-[60vh] w-full overflow-hidden">
         <img 
           src={image} 
           alt={destinationName} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover scale-105"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
         
         <button 
           onClick={onBack}
@@ -142,8 +140,8 @@ Whether you are looking to explore ancient ruins, indulge in world-renowned culi
       </div>
 
       {/* Tabs */}
-      <div className="px-4 -mt-6 relative z-10">
-        <div className="bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 p-2 flex overflow-x-auto flex-nowrap no-scrollbar gap-1 border border-slate-100 touch-pan-x">
+      <div className="px-4 -mt-6 relative z-10 flex flex-col items-center gap-4">
+        <div className="bg-white/80 backdrop-blur-xl rounded-[32px] shadow-2xl shadow-slate-200/50 p-2 flex overflow-x-auto flex-nowrap no-scrollbar gap-1 border border-slate-100 touch-pan-x w-full max-w-fit">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -159,6 +157,26 @@ Whether you are looking to explore ancient ruins, indulge in world-renowned culi
             </button>
           ))}
         </div>
+        
+        {hasError && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-4 bg-amber-50 px-6 py-3 rounded-2xl border border-amber-100 shadow-sm"
+          >
+            <div className="flex items-center gap-2 text-amber-700 text-[10px] font-black uppercase tracking-widest">
+              <Sparkles className="w-3 h-3" /> Showing Backup Guide
+            </div>
+            <div className="w-px h-4 bg-amber-200" />
+            <button 
+              onClick={fetchDetails}
+              className="text-[10px] font-black text-blue-600 hover:text-blue-800 uppercase tracking-widest flex items-center gap-2 group"
+            >
+              <Loader2 className="w-3 h-3 group-hover:rotate-180 transition-transform duration-500" />
+              Retry AI Generation
+            </button>
+          </motion.div>
+        )}
       </div>
 
       {/* Tab Content */}

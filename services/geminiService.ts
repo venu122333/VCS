@@ -38,10 +38,13 @@ const fetchWithRetry = async (fn: () => Promise<any>, retries = 3, delay = 1000)
       error.status === 429 || 
       error.status === 500 || 
       error.status === 503 || 
-      error.message?.includes("RETRY_INVALID_JSON");
+      error.status === 504 || 
+      error.message?.includes("RETRY_INVALID_JSON") ||
+      error.message?.includes("fetch failed") ||
+      error.message?.includes("network error");
 
     if (retries > 0 && isRetryableError) {
-      console.log(`Retrying... (${retries} attempts left). Error: ${error.message || error.status}`);
+      console.log(`[NOMAD-AI] Retrying after error: ${error.message || error.status}. Attempts left: ${retries}`);
       await new Promise(resolve => setTimeout(resolve, delay));
       return fetchWithRetry(fn, retries - 1, delay * 2);
     }
@@ -85,7 +88,7 @@ export const generateTravelPlan = async (
   
   CONTENT RULES:
   ${moodInstructions}
-  - Provide a long, engaging 3-paragraph summary of why this trip is perfect for the user.
+  - Provide a deep, evocative summary (at least 2 long paragraphs, 5-6 lines each) explaining why this specific architectural choice was made for the user.
   - Provide 3-sentence detailed descriptions for every single activity.
   - EXACTLY ${activitiesPerDay} activities/day. Do not provide more or less than ${activitiesPerDay} activities per day.
   - Be specific about locations and names of places.
@@ -248,7 +251,7 @@ export const generateDestinationDetails = async (destination: string): Promise<a
   const prompt = `You are a world-class travel guide. Provide an EXTENSIVE, IMMERSIVE, and CAPTIVATING travel guide for ${destination}. 
   
   YOUR RESPONSE MUST BE HIGHLY DETAILED:
-  1. OVERVIEW: Write a rich and immersive overview consisting of 4 distinct, long and informative paragraphs. 
+  1. OVERVIEW: Write a rich and immersive overview consisting of 4 distinct, very long and informative paragraphs (aim for 5-6 lines each in a standard UI). 
      - Paragraph 1: Ancient origins, etymology, and historical evolution.
      - Paragraph 2: Architectural marvels and the soul of the people.
      - Paragraph 3: Deep cultural immersion - traditions, festivals, and local philosophy.

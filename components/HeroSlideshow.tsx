@@ -44,7 +44,7 @@ const HeroSlideshow: React.FC = () => {
           src={images[currentIndex].url}
           alt={images[currentIndex].alt}
           initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: 0.6, scale: 1 }}
+          animate={{ opacity: 0.8, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 2, ease: "easeInOut" }}
           className="w-full h-full object-cover"
@@ -52,7 +52,7 @@ const HeroSlideshow: React.FC = () => {
         />
       </AnimatePresence>
       {/* Overlay to ensure text readability */}
-      <div className="absolute inset-0 bg-slate-900/40"></div>
+      <div className="absolute inset-0 bg-slate-950/30"></div>
     </div>
   );
 };
