@@ -19,10 +19,12 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Compass, MessageSquare, User as UserIcon, Wand2 } from 'lucide-react';
+import { useLanguage } from './contexts/LanguageContext';
 
 type activeView = 'HOME' | 'PLAN' | 'EXPLORE' | 'CHAT' | 'PROFILE' | 'ITINERARY' | 'DIVINE' | 'DESTINATION_DETAIL';
 
 const App: React.FC = () => {
+  const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<activeView>('HOME');
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
@@ -529,11 +531,11 @@ const App: React.FC = () => {
         {/* Mobile Bottom Navigation */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 flex justify-around items-center py-4 px-2 z-[60] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] rounded-t-[32px]">
           {[
-            { id: 'HOME', icon: Home, label: 'Home' },
-            { id: 'EXPLORE', icon: Compass, label: 'Explore' },
-            { id: 'PLAN', icon: Wand2, label: 'Build' },
+            { id: 'HOME', icon: Home, label: t.home },
+            { id: 'EXPLORE', icon: Compass, label: t.explore },
+            { id: 'PLAN', icon: Wand2, label: t.build },
             { id: 'CHAT', icon: MessageSquare, label: 'Coach' },
-            { id: 'PROFILE', icon: UserIcon, label: 'Profile' }
+            { id: 'PROFILE', icon: UserIcon, label: t.profile }
           ].map((item) => (
             <button
               key={item.id}
@@ -547,6 +549,11 @@ const App: React.FC = () => {
         </nav>
 
         <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+
+        {/* Floating Nomad Coach - Desktop Only */}
+        <div className="hidden md:block">
+          <ChatCoach destination={plan?.destination || destination} />
+        </div>
       </div>
     </ErrorBoundary>
   );

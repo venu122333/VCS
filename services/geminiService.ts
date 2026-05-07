@@ -1,6 +1,7 @@
 
 import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import { TravelPlan, TravelMood, TravelerType } from "../types";
+import { POPULAR_LANGUAGES } from "../constants/languages";
 
 const getApiKey = () => {
   // First check if it's provided in the environment (AI Studio default)
@@ -17,7 +18,7 @@ const getApiKey = () => {
 let aiInstance: GoogleGenAI | null = null;
 let lastUsedKey: string | null = null;
 
-const getAI = () => {
+export const getAI = () => {
   const key = getApiKey();
   if (!key) {
     throw new Error('Gemini API Key is missing. Please provide it in the Settings.');
@@ -77,6 +78,9 @@ export const generateTravelPlan = async (
     "- DIVINE & SPIRITUAL FOCUS: Prioritize FAMOUS TEMPLES, sacred sites, and places of worship. Focus on peace and spiritual richness (God/Divine focus)." : 
     "- BEST VALUE FOCUS: Select activities that provide a superior local experience for the least amount of money.";
 
+  const currentLang = typeof window !== 'undefined' ? localStorage.getItem('nomad_lang') || 'en' : 'en';
+  const languageName = POPULAR_LANGUAGES.find(l => l.code === currentLang)?.name || 'English';
+
   const prompt = `Plan a ${duration}-day trip to ${destination} (${mood}). 
   Travelers: ${travelerCount} ${travelerType}.
   Budget: ${budgetText}
@@ -88,6 +92,7 @@ export const generateTravelPlan = async (
   
   CONTENT RULES:
   ${moodInstructions}
+  - LANGUAGE: All text (destination name, summary, activity titles, activity descriptions) MUST be written in ${languageName}.
   - Provide a deep, evocative summary (at least 2 long paragraphs, 5-6 lines each) explaining why this specific architectural choice was made for the user.
   - Provide 3-sentence detailed descriptions for every single activity.
   - EXACTLY ${activitiesPerDay} activities/day. Do not provide more or less than ${activitiesPerDay} activities per day.
@@ -212,7 +217,15 @@ export const createTravelChat = (systemInstruction: string) => {
   return getAI().chats.create({
     model: 'gemini-3.1-flash-lite-preview',
     config: {
-      systemInstruction: `${systemInstruction} CRITICAL: Answer in max 3 sentences. Speed is priority #1. Be ultra-concise but extremely friendly with emojis.`,
+      systemInstruction: `${systemInstruction} 🚀 
+
+      YOUR PERSONALITY:
+      - You are the "Nomad Coach", the ultimate AI explorer. 🧭✨
+      - You are witty, super-smart, and incredibly cool. 😎
+      - Use tons of travel-related emojis (🌍✈️🏝️🏔️🍜).
+      - Be punchy, fast, and always provide a "pro-tip" or "secret gem" in every response. 💎
+      - If asked about speed, brag about your ultra-fast 3.1 architecture! ⚡💨
+      - Never yap. Keep it thrilling. 💥`,
       thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }
     },
   });
@@ -248,8 +261,13 @@ export const generateDestinationImage = async (destination: string, mood: string
 };
 
 export const generateDestinationDetails = async (destination: string): Promise<any> => {
+  const currentLang = typeof window !== 'undefined' ? localStorage.getItem('nomad_lang') || 'en' : 'en';
+  const languageName = POPULAR_LANGUAGES.find(l => l.code === currentLang)?.name || 'English';
+
   const prompt = `You are a world-class travel guide. Provide an EXTENSIVE, IMMERSIVE, and CAPTIVATING travel guide for ${destination}. 
   
+  LANGUAGE: All text in your response (overview, hotel descriptions, activity stories, restaurant details) MUST be written in ${languageName}.
+
   YOUR RESPONSE MUST BE HIGHLY DETAILED:
   1. OVERVIEW: Write a rich and immersive overview consisting of 4 distinct, very long and informative paragraphs (aim for 5-6 lines each in a standard UI). 
      - Paragraph 1: Ancient origins, etymology, and historical evolution.

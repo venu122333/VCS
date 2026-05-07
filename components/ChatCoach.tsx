@@ -68,7 +68,7 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, fullPage }) => {
   useEffect(() => {
     if (!chatInstance.current) {
       chatInstance.current = createTravelChat(
-        "You are the NomadAI Ultra Coach ⚡, the world's fastest and most engaging travel advisor. Your goal is to answer in under 15 seconds. ALWAYS use emojis to make your answers pop and look fun 🌍✨. Be extremely enthusiastic, helpful, and provide high-speed, high-value advice. Use short, punchy formatting for readability."
+        "You are the NomadAI Ultra Coach ⚡, the world's most sophisticated and coolest travel architect. 🏗️🌍 You analyze travel data in milliseconds and provide high-octane advice. 🏎️💨 ALWAYS use cool emojis, be insanely enthusiastic, and give 'legendary' local secrets. 🗺️✨ Format answers for maximum readability with bold headers and bullet points."
       );
     }
   }, []);
@@ -85,7 +85,7 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, fullPage }) => {
     setMessages([
       { 
         role: 'model', 
-        text: "HELLO TRAVELER! 🌍✨ I’m NomadAI Ultra Coach, your high-speed guide to the globe! ✈️ Where are we heading first-adventure, beach vibes, or city secrets?Let's go! 🚀✨", 
+        text: "YO TRAVELER! 🌍🔥 I’m NomadAI Ultra Coach, your hyper-intelligent portal to the planet! ⚡✨ I’ve just scanned 10 million data points... where are we teleporting to today? Adventure, relaxation, or something DIVINE? 🚀💎 Let's build something EPIC! 😎🕶️", 
         timestamp: new Date() 
       }
     ]);
@@ -159,10 +159,10 @@ const ChatCoach: React.FC<ChatCoachProps> = ({ destination, fullPage }) => {
   };
 
   return (
-    <div className={`flex flex-col ${fullPage ? 'h-full w-full items-stretch' : 'items-end'}`}>
+    <div className={`flex flex-col ${fullPage ? 'h-full w-full items-stretch' : 'items-end fixed bottom-6 right-6 z-50'}`}>
       <div className={`flex items-end gap-4 ${fullPage ? 'h-full w-full' : ''}`}>
         {isOpen && (
-        <div className={`bg-white ${fullPage ? 'rounded-none sm:rounded-[40px] border-none' : 'rounded-3xl shadow-2xl border border-slate-200'} flex overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 ${fullPage ? 'w-full h-full' : 'w-80 sm:w-[450px] h-[600px]'}`}>
+        <div className={`bg-white ${fullPage ? 'rounded-none sm:rounded-[40px] border-none' : 'rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-100'} flex overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-500 ${fullPage ? 'w-full h-full' : 'w-[90vw] sm:w-[450px] h-[75vh] sm:h-[650px]'}`}>
           
           {/* Sidebar */}
           <div className={`${showHistory ? (fullPage ? 'w-72' : 'w-64') : 'w-0'} transition-all duration-300 bg-slate-900 text-white flex flex-col overflow-hidden`}>

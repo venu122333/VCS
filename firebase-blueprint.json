@@ -46,6 +46,21 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "destination", "itinerary", "createdAt"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "description": "User rating for a destination or trip.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userDisplayName": { "type": "string" },
+        "targetId": { "type": "string", "description": "ID of the destination, village, or town." },
+        "targetName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "targetId", "rating", "createdAt"]
     }
   },
   "firestore": {
@@ -56,6 +71,10 @@
     "/users/{userId}/plans/{planId}": {
       "schema": "TravelPlan",
       "description": "Travel plans belonging to a specific user."
+    },
+    "/ratings/{ratingId}": {
+      "schema": "Rating",
+      "description": "Public reviews and ratings for destinations."
     }
   }
 }

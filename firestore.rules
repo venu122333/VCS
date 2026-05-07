@@ -100,5 +100,35 @@ service cloud.firestore {
         allow delete: if isOwner(userId);
       }
     }
+
+    // ===============================================================
+    // Rating Rules
+    // ===============================================================
+
+    function isValidRating(data) {
+      let allowedFields = ['userId', 'userDisplayName', 'targetId', 'targetName', 'rating', 'comment', 'createdAt'];
+      return data.keys().hasAll(['userId', 'targetId', 'rating', 'createdAt']) &&
+             data.keys().hasOnly(allowedFields) &&
+             data.userId == request.auth.uid &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             (data.get('comment', null) == null || (data.comment is string && data.comment.size() <= 1000)) &&
+             data.createdAt is timestamp;
+    }
+
+    match /ratings/{ratingId} {
+      allow read, list: if true;
+      
+      allow create: if isSignedIn() && 
+                      isValidRating(incoming()) && 
+                      incoming().createdAt == request.time;
+      
+      allow update: if isSignedIn() && 
+                      request.auth.uid == existing().userId &&
+                      isValidRating(incoming()) && 
+                      incoming().userId == existing().userId &&
+                      incoming().createdAt == existing().createdAt;
+      
+      allow delete: if isSignedIn() && request.auth.uid == existing().userId;
+    }
   }
 }

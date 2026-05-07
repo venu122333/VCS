@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, MapPin, Grid, List, TrendingUp, Filter } from 'lucide-react';
+import { Search, MapPin, Grid, List, TrendingUp, Filter, Star } from 'lucide-react';
 import { POPULAR_DESTINATIONS, Destination } from '../../constants/destinations';
+import { StarRatingDisplay, RatingBadge } from '../RatingSystem';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface ExploreViewProps {
   onViewDetails: (destination: Destination) => void;
 }
 
 const ExploreView: React.FC<ExploreViewProps> = ({ onViewDetails }) => {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<'All' | 'Village' | 'Popular' | 'Metropolis'>('All');
 
@@ -45,23 +48,7 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onViewDetails }) => {
     <div className="pb-24 pt-6 px-4 max-w-7xl mx-auto space-y-8">
       {/* Dynamic Header */}
       <div className="space-y-4">
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Explore the world</h1>
-        
-        <div className="flex gap-2 items-center overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar">
-          {['All', 'Village', 'Popular', 'Metropolis'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat as any)}
-              className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all whitespace-nowrap ${
-                activeCategory === cat 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' 
-                : 'bg-white border-2 border-slate-50 text-slate-500 hover:border-slate-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t.explore}</h1>
       </div>
 
       {/* Search Input */}
@@ -73,7 +60,7 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onViewDetails }) => {
           type="text" 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search villages, cities or islands..."
+          placeholder={t.searchPlaceholder}
           className="w-full bg-white border-2 border-slate-100 py-4 pl-12 pr-12 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium"
         />
         <button className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-slate-50 text-slate-400">
@@ -109,8 +96,11 @@ const ExploreView: React.FC<ExploreViewProps> = ({ onViewDetails }) => {
                 </div>
                 <div className="p-4 space-y-2">
                   <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{dest.name}</h3>
-                    <div className="flex items-center gap-1 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight line-clamp-1">{dest.name}</h3>
+                      <RatingBadge targetId={dest.name} />
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-400 text-[10px] font-black uppercase tracking-widest flex-none ml-2">
                       <MapPin className="w-3 h-3" />
                       {dest.country}
                     </div>

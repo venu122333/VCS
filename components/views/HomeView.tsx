@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, ArrowRight, Compass, Sparkles, Heart, Zap, Coffee } from 'lucide-react';
+import { MapPin, ArrowRight, Compass, Sparkles, Heart, Zap, Coffee, Star } from 'lucide-react';
 import { TravelMood } from '../../types';
 import { shuffleDestinations, Destination } from '../../constants/destinations';
+import { StarRatingDisplay, RatingBadge } from '../RatingSystem';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface HomeViewProps {
   onViewDetails: (destination: Destination) => void;
@@ -11,14 +13,15 @@ interface HomeViewProps {
 }
 
 const HomeView: React.FC<HomeViewProps> = ({ onViewDetails, onSetMood, onExplore }) => {
+  const { t } = useLanguage();
   const shuffledDestinations = useMemo(() => shuffleDestinations(12), []);
 
   const moodCards = [
-    { mood: TravelMood.ADVENTUROUS, label: 'Excited', sub: 'Adventure Awaits', icon: Zap, color: 'bg-blue-600', iconColor: 'text-blue-100', image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&h=500&q=80' },
-    { mood: TravelMood.CULTURAL, label: 'Divine', sub: 'Temples & Sacred Sites', icon: () => <span className="text-lg leading-none">🙏</span>, color: 'bg-rose-500', iconColor: 'text-rose-100', image: 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?auto=format&fit=crop&w=400&h=500&q=80' },
-    { mood: TravelMood.RELAXED, label: 'Relaxed', sub: 'Weekend Relaxation', icon: Coffee, color: 'bg-orange-500', iconColor: 'text-orange-100', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=400&h=500&q=80' },
-    { mood: TravelMood.FOODIE, label: 'Hungry', sub: 'Local Gastronomy', icon: Coffee, color: 'bg-emerald-500', iconColor: 'text-emerald-100', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&h=500&q=80' },
-    { mood: TravelMood.ROMANTIC, label: 'Loving', sub: 'Romantic Escape', icon: Heart, color: 'bg-pink-500', iconColor: 'text-pink-100', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.ADVENTUROUS, label: 'Excited', sub: 'Enjoy Epic Adventure', icon: Zap, color: 'bg-blue-600', iconColor: 'text-blue-100', image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.CULTURAL, label: 'Divine', sub: 'Enjoy Sacred Sites', icon: () => <span className="text-lg leading-none">🙏</span>, color: 'bg-rose-500', iconColor: 'text-rose-100', image: 'https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.RELAXED, label: 'Relaxed', sub: 'Enjoy Weekend Bliss', icon: Coffee, color: 'bg-orange-500', iconColor: 'text-orange-100', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.FOODIE, label: 'Hungry', sub: 'Enjoy Local Gastronomy', icon: Coffee, color: 'bg-emerald-500', iconColor: 'text-emerald-100', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&h=500&q=80' },
+    { mood: TravelMood.ROMANTIC, label: 'Loving', sub: 'Enjoy Romantic Escapes', icon: Heart, color: 'bg-pink-500', iconColor: 'text-pink-100', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=400&h=500&q=80' },
   ];
 
   return (
@@ -26,12 +29,12 @@ const HomeView: React.FC<HomeViewProps> = ({ onViewDetails, onSetMood, onExplore
       {/* Mood Section */}
       <section className="space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Based on your mood</h2>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">{t.basedOnMood}</h2>
           <button 
             onClick={onExplore}
             className="text-sm font-bold text-blue-600 flex items-center gap-1 group"
           >
-            See all <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {t.explore} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
         
@@ -71,8 +74,8 @@ const HomeView: React.FC<HomeViewProps> = ({ onViewDetails, onSetMood, onExplore
       {/* Popular Destinations Section */}
       <section className="space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Popular Destinations</h2>
-          <button onClick={onExplore} className="text-sm font-bold text-blue-600">See all</button>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">{t.mostPopular}</h2>
+          <button onClick={onExplore} className="text-sm font-bold text-blue-600">{t.explore}</button>
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -96,9 +99,12 @@ const HomeView: React.FC<HomeViewProps> = ({ onViewDetails, onSetMood, onExplore
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <div>
-                <h4 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                  {dest.name}, {dest.country}
-                </h4>
+                <div className="flex justify-between items-start">
+                  <h4 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    {dest.name}, {dest.country}
+                  </h4>
+                  <RatingBadge targetId={dest.name} />
+                </div>
                 <p className="text-xs text-slate-400 font-medium">Famous for {dest.famousFor}</p>
               </div>
             </motion.div>

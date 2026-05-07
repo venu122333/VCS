@@ -2,7 +2,8 @@ import React from 'react';
 import HeroSlideshow from '../HeroSlideshow';
 import ItineraryDisplay from './ItineraryDisplay';
 import { TravelMood, TravelerType, TravelPlan } from '../../types';
-import { Wand2, MapPin, Users, Calendar, Wallet, Globe, Sparkles, CheckCircle2, Save, Compass } from 'lucide-react';
+import { Wand2, MapPin, Users, Calendar, Wallet, Globe, Sparkles, CheckCircle2, Save, Compass, MessageSquare } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface PlannerViewProps {
   destination: string;
@@ -53,6 +54,7 @@ const PlannerView: React.FC<PlannerViewProps> = ({
   isViewingSavedPlan,
   saveCount
 }) => {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen pb-24">
       {/* Hero Section */}
@@ -249,7 +251,7 @@ const PlannerView: React.FC<PlannerViewProps> = ({
             ) : (
               <>
                 <Wand2 className="w-6 h-6" />
-                Generate My Trip
+                {t.generate}
               </>
             )}
           </button>

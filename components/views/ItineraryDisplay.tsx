@@ -3,6 +3,8 @@ import React from 'react';
 import { TravelPlan } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
+import { RatingSystem } from '../RatingSystem';
+import { MessageCircle } from 'lucide-react';
 
 interface ItineraryDisplayProps {
   plan: TravelPlan;
@@ -292,6 +294,17 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ plan, heroImage }) 
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Trip Rating Section */}
+      <div className="space-y-8 pt-12 border-t border-slate-100">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 font-black">
+            <MessageCircle size={24} />
+          </div>
+          <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Rate this Architecture</h3>
+        </div>
+        <RatingSystem targetId={`trip-${plan.destination}-${plan.duration}`} targetName={`${plan.duration} Days in ${plan.destination}`} />
       </div>
     </div>
   );

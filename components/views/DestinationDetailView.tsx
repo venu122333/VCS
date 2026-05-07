@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, Star, Hotel, Compass, Utensils, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
+import { MapPin, Star, Hotel, Compass, Utensils, ArrowLeft, Loader2, Sparkles, MessageCircle } from 'lucide-react';
 import { DestinationDetails } from '../../types';
 import { generateDestinationDetails, generateDestinationImage } from '../../services/geminiService';
+import { RatingSystem } from '../RatingSystem';
 
 interface DestinationDetailViewProps {
   destinationName: string;
@@ -299,6 +300,17 @@ Whether you are looking to explore ancient ruins, indulge in world-renowned culi
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="px-4 mt-16 space-y-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500">
+            <MessageCircle size={24} />
+          </div>
+          <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Traveler Feedback</h3>
+        </div>
+        <RatingSystem targetId={destinationName} targetName={destinationName} />
       </div>
     </div>
   );
