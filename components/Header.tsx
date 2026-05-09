@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import SettingsModal from './SettingsModal';
 import { User } from 'firebase/auth';
 import { User as UserIcon, LogOut, Menu, X, Wand2, Settings, Home, Compass, MessageSquare } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface HeaderProps {
   user: User | null;
@@ -15,12 +16,13 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ user, userProfile, onLogout, onOpenProfile, onOpenSettings, currentView, onNavigate }) => {
+  const { t } = useLanguage();
   const navItems = [
-    { id: 'HOME', icon: Home, label: 'Home' },
-    { id: 'EXPLORE', icon: Compass, label: 'Explore' },
-    { id: 'PLAN', icon: Wand2, label: 'Build' },
-    { id: 'CHAT', icon: MessageSquare, label: 'Coach' },
-    { id: 'PROFILE', icon: UserIcon, label: 'Profile' }
+    { id: 'HOME', icon: Home, label: t.home },
+    { id: 'EXPLORE', icon: Compass, label: t.explore },
+    { id: 'PLAN', icon: Wand2, label: t.build },
+    { id: 'CHAT', icon: MessageSquare, label: t.coach },
+    { id: 'PROFILE', icon: UserIcon, label: t.profile }
   ];
 
   const isCustomAvatar = userProfile?.photoURL?.startsWith('data:');

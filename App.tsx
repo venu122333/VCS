@@ -14,7 +14,7 @@ import DestinationDetailView from './components/views/DestinationDetailView';
 import { TravelPlan, TravelMood, TravelerType } from './types';
 import { Destination } from './constants/destinations';
 import { generateTravelPlan, generateDestinationImage } from './services/geminiService';
-import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, getRedirectResult, formatAuthError } from './firebase';
+import { auth, db, signInWithGoogle, signInWithGithub, signInWithMicrosoft, loginWithEmail, continueAsGuest, logout, OperationType, handleFirestoreError, getRedirectResult, formatAuthError } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
@@ -26,20 +26,44 @@ type activeView = 'HOME' | 'PLAN' | 'EXPLORE' | 'CHAT' | 'PROFILE' | 'ITINERARY'
 const App: React.FC = () => {
   const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
-  const [currentView, setCurrentView] = useState<activeView>('HOME');
+  const [currentView, setCurrentView] = useState<activeView>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('nomad_view') as activeView) || 'HOME';
+    }
+    return 'HOME';
+  });
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
-  const [destination, setDestination] = useState('');
-  const [duration, setDuration] = useState<number | ''>(3);
-  const [budget, setBudget] = useState<number | ''>('');
-  const [currencyInfo, setCurrencyInfo] = useState('');
-  const [mood, setMood] = useState<TravelMood>(TravelMood.ADVENTUROUS);
-  const [travelerType, setTravelerType] = useState<TravelerType>(TravelerType.COUPLE);
-  const [travelerCount, setTravelerCount] = useState<number | ''>(2);
-  const [activitiesPerDay, setActivitiesPerDay] = useState<number | ''>(3);
-  const [notes, setNotes] = useState('');
+  const [destination, setDestination] = useState(() => localStorage.getItem('nomad_destination') || '');
+  const [duration, setDuration] = useState<number | ''>(() => {
+    const saved = localStorage.getItem('nomad_duration');
+    return saved ? parseInt(saved) : 3;
+  });
+  const [budget, setBudget] = useState<number | ''>(() => {
+    const saved = localStorage.getItem('nomad_budget');
+    return saved ? parseInt(saved) : '';
+  });
+  const [currencyInfo, setCurrencyInfo] = useState(() => localStorage.getItem('nomad_currency') || '');
+  const [mood, setMood] = useState<TravelMood>(() => (localStorage.getItem('nomad_mood') as TravelMood) || TravelMood.ADVENTUROUS);
+  const [travelerType, setTravelerType] = useState<TravelerType>(() => (localStorage.getItem('nomad_travelerType') as TravelerType) || TravelerType.COUPLE);
+  const [travelerCount, setTravelerCount] = useState<number | ''>(() => {
+    const saved = localStorage.getItem('nomad_travelerCount');
+    return saved ? parseInt(saved) : 2;
+  });
+  const [activitiesPerDay, setActivitiesPerDay] = useState<number | ''>(() => {
+    const saved = localStorage.getItem('nomad_activitiesPerDay');
+    return saved ? parseInt(saved) : 3;
+  });
+  const [notes, setNotes] = useState(() => localStorage.getItem('nomad_notes') || '');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [plan, setPlan] = useState<TravelPlan | null>(null);
-  const [heroImage, setHeroImage] = useState('');
+  const [plan, setPlan] = useState<TravelPlan | null>(() => {
+    const saved = localStorage.getItem('nomad_plan');
+    try {
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [heroImage, setHeroImage] = useState(() => localStorage.getItem('nomad_heroImage') || '');
   const [isViewingSavedPlan, setIsViewingSavedPlan] = useState(false);
   const [saveCount, setSaveCount] = useState(0);
   const [error, setError] = useState('');
@@ -49,6 +73,40 @@ const App: React.FC = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [userProfile, setUserProfile] = useState<{ photoURL?: string } | null>(null);
+
+  // Persistence side effects - combined for performance
+  useEffect(() => {
+    const data = {
+      nomad_view: currentView,
+      nomad_isGenerating: isGenerating ? 'true' : 'false',
+      nomad_destination: destination,
+      nomad_duration: duration.toString(),
+      nomad_budget: budget.toString(),
+      nomad_currency: currencyInfo,
+      nomad_mood: mood,
+      nomad_travelerType: travelerType,
+      nomad_travelerCount: travelerCount.toString(),
+      nomad_activitiesPerDay: activitiesPerDay.toString(),
+      nomad_notes: notes,
+      nomad_plan: plan ? JSON.stringify(plan) : null,
+      nomad_heroImage: heroImage
+    };
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (value === null) localStorage.removeItem(key);
+      else localStorage.setItem(key, value);
+    });
+  }, [currentView, isGenerating, destination, duration, budget, currencyInfo, mood, travelerType, travelerCount, activitiesPerDay, notes, plan, heroImage]);
+
+  // Handle generation resume if needed
+  useEffect(() => {
+    const wasGenerating = localStorage.getItem('nomad_isGenerating') === 'true';
+    if (wasGenerating && !plan && destination && isAuthReady && user && !isGenerating) {
+      // Auto-restart if we have the data but no plan
+      const event = new Event('submit') as unknown as React.FormEvent;
+      handleGenerate(event);
+    }
+  }, [isAuthReady, user, plan]);
 
   const hasApiKey = () => {
     const envKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
@@ -121,17 +179,21 @@ const App: React.FC = () => {
         getDoc(userRef).then((docSnap) => {
           let userData: any = {
             uid: currentUser.uid,
-            displayName: currentUser.displayName,
-            email: currentUser.email,
+            displayName: currentUser.isAnonymous ? 'Guest Architect' : currentUser.displayName,
+            isAnonymous: currentUser.isAnonymous,
             updatedAt: serverTimestamp()
           };
+
+          if (!currentUser.isAnonymous && currentUser.email) {
+            userData.email = currentUser.email;
+          }
 
           if (!docSnap.exists()) {
             userData.createdAt = serverTimestamp();
           }
           
-          setDoc(userRef, userData, { merge: true }).catch(err => handleFirestoreError(err, OperationType.WRITE, `users/${currentUser.uid}`));
-        }).catch(err => handleFirestoreError(err, OperationType.GET, `users/${currentUser.uid}`));
+          setDoc(userRef, userData, { merge: true }).catch(() => {});
+        }).catch(() => {});
 
         const plansQuery = query(
           collection(db, 'users', currentUser.uid, 'plans'),
@@ -205,7 +267,7 @@ const App: React.FC = () => {
       );
       
       const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('TIMEOUT_ERROR')), 75000)
+        setTimeout(() => reject(new Error('TIMEOUT_ERROR')), 60000)
       );
 
       const imagePromise = generateDestinationImage(destination, mood);
@@ -244,18 +306,49 @@ const App: React.FC = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleProviderLogin = async (providerFn: () => Promise<User | null>) => {
     setIsLoggingIn(true);
     setError('');
     try {
-      const user = await signInWithGoogle();
+      const user = await providerFn();
       if (!user) {
-        // User probably closed the popup, handle silently
         setIsLoggingIn(false);
         return;
       }
     } catch (err: any) {
-      console.error("Login Error:", err);
+      console.error("Provider Login Error:", err);
+      const friendlyMsg = err.friendlyMessage || formatAuthError(err);
+      if (friendlyMsg) setError(friendlyMsg);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleGoogleLogin = () => handleProviderLogin(signInWithGoogle);
+  const handleGithubLogin = () => handleProviderLogin(signInWithGithub);
+  const handleMicrosoftLogin = () => handleProviderLogin(signInWithMicrosoft);
+
+  const handleEmailLogin = async (email: string, pass: string) => {
+    setIsLoggingIn(true);
+    setError('');
+    try {
+      await loginWithEmail(email, pass);
+    } catch (err: any) {
+      console.error("Email Login error:", err);
+      const friendlyMsg = err.friendlyMessage || formatAuthError(err);
+      setError(friendlyMsg || "Authentication failed.");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setIsLoggingIn(true);
+    setError('');
+    try {
+      await continueAsGuest();
+    } catch (err: any) {
+      console.error("Guest Login Error:", err);
       const friendlyMsg = err.friendlyMessage || formatAuthError(err);
       if (friendlyMsg) {
         setError(friendlyMsg);
@@ -498,7 +591,17 @@ const App: React.FC = () => {
   }
 
   if (!user) {
-    return <LoginView onGoogleLogin={handleGoogleLogin} isLoggingIn={isLoggingIn} error={error} />;
+    return (
+      <LoginView 
+        onGoogleLogin={handleGoogleLogin} 
+        onGithubLogin={handleGithubLogin}
+        onMicrosoftLogin={handleMicrosoftLogin}
+        onGuestLogin={handleGuestLogin} 
+        onEmailLogin={handleEmailLogin} 
+        isLoggingIn={isLoggingIn} 
+        error={error} 
+      />
+    );
   }
 
   return (
@@ -534,7 +637,7 @@ const App: React.FC = () => {
             { id: 'HOME', icon: Home, label: t.home },
             { id: 'EXPLORE', icon: Compass, label: t.explore },
             { id: 'PLAN', icon: Wand2, label: t.build },
-            { id: 'CHAT', icon: MessageSquare, label: 'Coach' },
+            { id: 'CHAT', icon: MessageSquare, label: t.coach },
             { id: 'PROFILE', icon: UserIcon, label: t.profile }
           ].map((item) => (
             <button
@@ -549,11 +652,6 @@ const App: React.FC = () => {
         </nav>
 
         <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
-
-        {/* Floating Nomad Coach - Desktop Only */}
-        <div className="hidden md:block">
-          <ChatCoach destination={plan?.destination || destination} />
-        </div>
       </div>
     </ErrorBoundary>
   );

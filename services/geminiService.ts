@@ -18,6 +18,25 @@ const getApiKey = () => {
 let aiInstance: GoogleGenAI | null = null;
 let lastUsedKey: string | null = null;
 
+// Simple in-memory cache to prevent redundant expensive AI calls during a session
+const aiCache: Record<string, { data: any, timestamp: number }> = {};
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+
+const getCacheKey = (prefix: string, params: any) => {
+  return `${prefix}_${JSON.stringify(params)}`;
+};
+
+const withCache = async (key: string, fn: () => Promise<any>) => {
+  const cached = aiCache[key];
+  if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+    console.log(`[NOMAD-AI] Serving ${key} from cache`);
+    return cached.data;
+  }
+  const result = await fn();
+  aiCache[key] = { data: result, timestamp: Date.now() };
+  return result;
+};
+
 export const getAI = () => {
   const key = getApiKey();
   if (!key) {
@@ -85,28 +104,37 @@ export const generateTravelPlan = async (
   Travelers: ${travelerCount} ${travelerType}.
   Budget: ${budgetText}
   
-  MISSION: LEAST MONEY, BEST EXPERIENCE. Find budget hidden gems.
+  MISSION: LEAST MONEY, BEST EXPERIENCE. Find budget hidden gems and FAMOUS MUST-SEE landmarks.
   
   BUDGET LOGIC:
   ${budgetLogic}
   
   CONTENT RULES:
-  ${moodInstructions}
+  - SPELLING CORRECTION: If the destination "${destination}" has a spelling error, CORRECT IT in your response (e.g., "New York" instead of "New Yrok").
+  - GEOGRAPHIC ACCURACY: YOU MUST BE FACTUALLY CORRECT. NEVER place landmarks from one country in another. NEVER place Indian temples in New York. YOU MUST USE REAL-WORLD GEOGRAPHIC DATA. Every landmark, restaurant, and hotel MUST exist in the city you are planning for.
+  - SPECIFIC NAMES MANDATORY: DO NOT use generic terms like "local restaurant", "local pond", "nearby hotel", or "village walk". You MUST provide EXACT NAMES of real businesses.
+  - EXHAUSTIVE PLACES: If it's a small town (like Pamidi), find its actual famous spots and name them. 
+  - RELIABLE DATA: Do not provide "live" or real-time fluctuating information. Provide established local facts.
+  - VALIDATION: Before outputting, mentally verify if the landmark "Sri Lakshmi Narasimha Swamy Temple" is actually in "New York". (Hint: It is not). Only include landmarks that are physically located in the destination.
+  - ${moodInstructions}
   - LANGUAGE: All text (destination name, summary, activity titles, activity descriptions) MUST be written in ${languageName}.
   - Provide a deep, evocative summary (at least 2 long paragraphs, 5-6 lines each) explaining why this specific architectural choice was made for the user.
   - Provide 3-sentence detailed descriptions for every single activity.
   - EXACTLY ${activitiesPerDay} activities/day. Do not provide more or less than ${activitiesPerDay} activities per day.
-  - Be specific about locations and names of places.
-  - JSON only. NO YAPPING.`;
+  - RELIABLE DATA: Do not provide "live" or real-time fluctuating information (like current flight delays or live weather alerts). Provide established local facts, historically significant landmarks, and permanent institutions.
+  - JSON only. NO YAPPING. Respond strictly with the JSON object. Do not include any text before or after the JSON.`;
 
-  const result = await fetchWithRetry(async () => {
-    const response = await getAI().models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        maxOutputTokens: 8192, // Increased for long plans
-        responseSchema: {
+  const cacheKey = getCacheKey('plan', { destination, duration, mood, travelerType, travelerCount, currentLang });
+
+  const result = await withCache(cacheKey, async () => {
+    return await fetchWithRetry(async () => {
+      const response = await getAI().models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 8192, // Increased significantly to prevent JSON truncation
+          responseSchema: {
           type: Type.OBJECT,
           properties: {
             destination: { type: Type.STRING },
@@ -191,14 +219,15 @@ export const generateTravelPlan = async (
       }
     });
 
-    // Internal validation inside retry: if JSON is invalid, retry
-    try {
-      JSON.parse(response.text || '{}');
-      return response;
-    } catch (e) {
-      console.warn("Retrying due to invalid JSON fragment:", e);
-      throw new Error("RETRY_INVALID_JSON");
-    }
+      // Internal validation inside retry: if JSON is invalid, retry
+      try {
+        const text = response.text || '{}';
+        JSON.parse(text);
+        return response;
+      } catch (e) {
+        throw new Error("RETRY_INVALID_JSON");
+      }
+    });
   });
 
   try {
@@ -264,85 +293,47 @@ export const generateDestinationDetails = async (destination: string): Promise<a
   const currentLang = typeof window !== 'undefined' ? localStorage.getItem('nomad_lang') || 'en' : 'en';
   const languageName = POPULAR_LANGUAGES.find(l => l.code === currentLang)?.name || 'English';
 
-  const prompt = `You are a world-class travel guide. Provide an EXTENSIVE, IMMERSIVE, and CAPTIVATING travel guide for ${destination}. 
+  const cacheKey = getCacheKey('details', { destination, currentLang });
   
-  LANGUAGE: All text in your response (overview, hotel descriptions, activity stories, restaurant details) MUST be written in ${languageName}.
-
-  YOUR RESPONSE MUST BE HIGHLY DETAILED:
-  1. OVERVIEW: Write a rich and immersive overview consisting of 4 distinct, very long and informative paragraphs (aim for 5-6 lines each in a standard UI). 
-     - Paragraph 1: Ancient origins, etymology, and historical evolution.
-     - Paragraph 2: Architectural marvels and the soul of the people.
-     - Paragraph 3: Deep cultural immersion - traditions, festivals, and local philosophy.
-     - Paragraph 4: Culinary heritage and why it is a global bucket-list destination today.
-  2. HOTELS: 3 luxury/boutique choices with 4-sentence evocative descriptions for each.
-  3. THINGS TO DO: 4 must-experience landmark activities with 4-sentence legendary stories/background for each.
-  4. RESTAURANTS: 3 top-tier culinary institutions with 4-sentence descriptions of their heritage and signature dishes.
+  const result = await withCache(cacheKey, async () => {
+    const prompt = `You are a world-class travel guide. Provide an EXTENSIVE, IMMERSIVE, and CAPTIVATING travel guide for ${destination}. 
+    
+    LANGUAGE: All text in your response (overview, hotel descriptions, activity stories, restaurant details) MUST be written in ${languageName}.
   
-  Respond ONLY in JSON format. Use double newlines (\\n\\n) between paragraphs in the description. Be poetic and thorough.`;
-
-  const result = await fetchWithRetry(async () => {
-    const response = await getAI().models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        maxOutputTokens: 8192, // High limit for immersive guides
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            name: { type: Type.STRING },
-            description: { type: Type.STRING },
-            hotels: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  description: { type: Type.STRING },
-                  price: { type: Type.STRING },
-                  rating: { type: Type.STRING }
-                },
-                required: ["name", "description", "price", "rating"]
-              }
-            },
-            thingsToDo: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  description: { type: Type.STRING },
-                  rating: { type: Type.STRING }
-                },
-                required: ["name", "description", "rating"]
-              }
-            },
-            restaurants: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  description: { type: Type.STRING },
-                  price: { type: Type.STRING },
-                  rating: { type: Type.STRING }
-                },
-                required: ["name", "description", "price", "rating"]
-              }
-            }
-          },
-          required: ["name", "description", "hotels", "thingsToDo", "restaurants"]
+    YOUR RESPONSE MUST BE HIGHLY DETAILED & FACTUAL:
+    - FACTS ONLY: Use real geographic locations. Do not hallucinate landmarks. Do not place attractions from different countries or cities in this itinerary.
+    - SPECIFIC NAMES: Always use EXACT NAMES of real businesses (hotels, cafes) and monuments. No generic "local shops" or "nearby parks".
+    - NO LIVE DATA: Avoid real-time information that changes daily (current events, live traffic, current weather). Stick to established local knowledge.
+    1. OVERVIEW: Write a rich overview consisting of 3 distinct, informative paragraphs.
+       - Paragraph 1: History and origins.
+       - Paragraph 2: Culture and soul of the people.
+       - Paragraph 3: Culinary heritage and why visit today.
+    2. HOTELS: 3 real luxury/boutique choices with 3-sentence evocative descriptions and ACTUAL NAMES.
+    3. THINGS TO DO: 4 real landmark activities with 3-sentence legendary stories and ACTUAL NAMES.
+    4. RESTAURANTS: 3 real top-tier institutions with 3-sentence descriptions and ACTUAL NAMES.
+    
+    Respond ONLY in JSON format. Use double newlines (\\n\\n) between paragraphs in the description. Be poetic.`;
+  
+    return await fetchWithRetry(async () => {
+      const response = await getAI().models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 8192, 
+          // We rely on the model for schema compliance, but we add a safety check below
         }
+      });
+
+      try {
+        const text = response.text || '{}';
+        JSON.parse(text);
+        return response;
+      } catch (e) {
+        // We log silently and retry
+        throw new Error("RETRY_INVALID_JSON_DETAILS");
       }
     });
-
-    try {
-      JSON.parse(response.text || '{}');
-      return response;
-    } catch (e) {
-      console.warn("Retrying destination details due to invalid JSON:", e);
-      throw new Error("RETRY_INVALID_JSON_DETAILS");
-    }
   });
 
   try {

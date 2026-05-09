@@ -2,6 +2,8 @@ import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
   GoogleAuthProvider, 
+  GithubAuthProvider,
+  OAuthProvider,
   signInWithPopup, 
   signInWithRedirect, 
   getRedirectResult, 
@@ -9,7 +11,10 @@ import {
   onAuthStateChanged, 
   User, 
   setPersistence, 
-  browserLocalPersistence 
+  browserLocalPersistence,
+  signInAnonymously,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
 } from 'firebase/auth';
 import { 
   getFirestore, 
@@ -50,6 +55,9 @@ export const db = initializeFirestore(app, {
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
+export const githubProvider = new GithubAuthProvider();
+export const microsoftProvider = new OAuthProvider('microsoft.com');
+
 // Helper to format Firebase Auth errors
 export const formatAuthError = (error: any): string => {
   switch (error.code) {
@@ -59,6 +67,20 @@ export const formatAuthError = (error: any): string => {
       return `This domain ("${window.location.hostname}") is not authorized for Google Sign-in. Please add it to "Authorized Domains" in the Firebase Console.`;
     case 'auth/popup-blocked':
       return "The login popup was blocked. Please enable popups or try 'Open in new tab'.";
+    case 'auth/operation-not-allowed':
+      return "This authentication method is not enabled. Please go to the Firebase Console -> Authentication -> Sign-in Method and enable Google, GitHub, Microsoft, or Email/Password as needed.";
+    case 'auth/admin-restricted-operation':
+      return "Authentication method not enabled. Please go to the Firebase Console -> Authentication -> Sign-in Method and enable 'Anonymous', 'Google', 'GitHub', 'Microsoft' and 'Email/Password' as needed.";
+    case 'auth/invalid-credential':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return "Incorrect email or password. Please check your credentials.";
+    case 'auth/email-already-in-use':
+      return "This email is already in use. Try signing in or using another email.";
+    case 'auth/weak-password':
+      return "Password must be at least 6 characters long.";
+    case 'auth/invalid-email':
+      return "Please enter a valid email address.";
     case 'auth/popup-closed-by-user':
     case 'auth/cancelled-popup-request':
       return ""; // Silent fail
@@ -69,40 +91,71 @@ export const formatAuthError = (error: any): string => {
   }
 };
 
-// Auth functions
-export const signInWithGoogle = async () => {
+export const signInWithProvider = async (provider: GoogleAuthProvider | GithubAuthProvider | OAuthProvider) => {
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const isInIframe = window.self !== window.top;
 
   try {
-    // In mobile APK/WebView, popups are almost always blocked.
-    // However, if we're in an iframe (like AI Studio preview), we MUST use popup.
     if (isMobile && !isInIframe) {
-      console.log("Mobile/APK environment detected, using redirect.");
-      await signInWithRedirect(auth, googleProvider);
+      await signInWithRedirect(auth, provider);
       return null;
     }
 
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, provider);
       return result.user;
     } catch (popupError: any) {
-      console.log("Popup failed, checking fallback:", popupError.code);
-      
-      // Fallback to redirect if popup is blocked/unsupported and were on mobile
       if (isMobile && !isInIframe) {
-        await signInWithRedirect(auth, googleProvider);
+        await signInWithRedirect(auth, provider);
         return null;
       }
-      
       throw popupError;
     }
   } catch (error: any) {
     if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
       return null;
     }
-    console.error("Sign-in error:", error);
-    // Attach user-friendly message
+    error.friendlyMessage = formatAuthError(error);
+    throw error;
+  }
+};
+
+export const signInWithGoogle = () => signInWithProvider(googleProvider);
+export const signInWithGithub = () => signInWithProvider(githubProvider);
+export const signInWithMicrosoft = () => signInWithProvider(microsoftProvider);
+
+export const loginWithEmail = async (email: string, password: string) => {
+  try {
+    // Try sign in first
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return result.user;
+  } catch (error: any) {
+    // If user doesn't exist, try sign up (infinite/continuous flow)
+    if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+      try {
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        return result.user;
+      } catch (signUpError: any) {
+        // If creation fails with email-already-in-use after sign-in failed, it means wrong password
+        if (signUpError.code === 'auth/email-already-in-use') {
+          error.friendlyMessage = formatAuthError(error);
+          throw error;
+        }
+        signUpError.friendlyMessage = formatAuthError(signUpError);
+        throw signUpError;
+      }
+    }
+    error.friendlyMessage = formatAuthError(error);
+    throw error;
+  }
+};
+
+export const continueAsGuest = async () => {
+  try {
+    const result = await signInAnonymously(auth);
+    return result.user;
+  } catch (error: any) {
+    console.error("Guest sign-in error:", error);
     error.friendlyMessage = formatAuthError(error);
     throw error;
   }
@@ -111,6 +164,15 @@ export const signInWithGoogle = async () => {
 export const logout = async () => {
   try {
     await signOut(auth);
+    // Clear persisted travel data
+    const keys = [
+      'nomad_view', 'nomad_isGenerating', 'nomad_destination', 
+      'nomad_duration', 'nomad_budget', 'nomad_currency', 
+      'nomad_mood', 'nomad_travelerType', 'nomad_travelerCount', 
+      'nomad_activitiesPerDay', 'nomad_notes', 'nomad_plan', 'nomad_heroImage'
+    ];
+    keys.forEach(k => localStorage.removeItem(k));
+    window.location.reload(); // Hard reload to clear all state
   } catch (error) {
     console.error("Error signing out:", error);
     throw error;

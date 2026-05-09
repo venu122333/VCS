@@ -158,23 +158,37 @@ export const RatingSystem: React.FC<RatingSystemProps> = ({ targetId, targetName
             className="overflow-hidden"
           >
             <div className="p-6 bg-white border-2 border-blue-50 rounded-[32px] space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-bold text-slate-700">How many stars?</span>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onMouseEnter={() => setHoverRating(star)}
-                      onMouseLeave={() => setHoverRating(0)}
-                      onClick={() => setUserRating(star)}
-                      className="transition-transform active:scale-125"
-                    >
-                      <Star 
-                        size={28} 
-                        className={`${(hoverRating || userRating) >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-200'} transition-colors`} 
-                      />
-                    </button>
-                  ))}
+              <div className="space-y-4">
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-slate-700 uppercase tracking-tight">Your Score</span>
+                    <span className="text-2xl font-black text-blue-600 font-mono">{userRating.toFixed(1)}</span>
+                  </div>
+                  
+                  <div className="relative h-12 flex items-center group">
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      step="0.1"
+                      value={userRating}
+                      onChange={(e) => setUserRating(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between px-1">
+                    {[1, 2, 3, 4, 5].map((val) => (
+                      <div key={val} className="flex flex-col items-center gap-1">
+                        <div className={`w-1 h-1 rounded-full ${userRating >= val ? 'bg-blue-600' : 'bg-slate-200'}`} />
+                        <span className="text-[10px] font-black text-slate-400 font-mono">{val}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-center gap-1 py-2">
+                    <StarRatingDisplay rating={userRating} size={24} />
+                  </div>
                 </div>
               </div>
 

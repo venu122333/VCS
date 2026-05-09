@@ -124,6 +124,7 @@ const PlannerView: React.FC<PlannerViewProps> = ({
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 placeholder="e.g. Kyoto, Japan or Amalfi Coast"
+                spellCheck="true"
                 className="w-full bg-slate-50 border-none rounded-2xl py-4 px-4 focus:ring-2 focus:ring-blue-600 transition-all font-bold text-slate-900"
               />
             </div>

@@ -20,6 +20,7 @@ export interface UITranslations {
   saveTrip: string;
   generate: string;
   language: string;
+  coach: string;
 }
 
 const DEFAULT_TRANSLATIONS: UITranslations = {
@@ -39,7 +40,8 @@ const DEFAULT_TRANSLATIONS: UITranslations = {
   logout: 'Logout',
   saveTrip: 'Save Trip',
   generate: 'Generate',
-  language: 'Language'
+  language: 'Language',
+  coach: 'Coach'
 };
 
 export const getLanguageName = (code: string) => {

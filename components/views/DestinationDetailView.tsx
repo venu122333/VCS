@@ -32,7 +32,7 @@ const DestinationDetailView: React.FC<DestinationDetailViewProps> = ({
     
     try {
       const timeoutPromise = new Promise<any>((_, reject) => 
-        setTimeout(() => reject(new Error('TIMEOUT_ERROR')), 90000)
+        setTimeout(() => reject(new Error('TIMEOUT_ERROR')), 120000)
       );
       
       const data = await Promise.race([
